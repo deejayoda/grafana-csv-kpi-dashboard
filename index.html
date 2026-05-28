@@ -57,11 +57,8 @@ header{background:var(--sur);border-bottom:1px solid var(--brd);padding:var(--s4
 input[type=datetime-local]{font-family:var(--fm);font-size:var(--txs);background:var(--sur);border:1px solid var(--brd);border-radius:var(--rsm);color:var(--txt);padding:3px 8px;outline:none;transition:border-color 180ms}
 input[type=datetime-local]:focus{border-color:var(--pri)}
 .tc-div{color:var(--faint);font-size:var(--txs)}
-
-/* Grafana-style range picker */
 .range-select{font-family:var(--fb);font-size:var(--txs);background:var(--sur);border:1px solid var(--brd);border-radius:var(--rsm);color:var(--txt);padding:3px 28px 3px 8px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:160px}
 .range-select:focus{border-color:var(--pri)}
-
 .btn-apply{font-size:var(--txs);font-weight:600;padding:4px 14px;border-radius:var(--rmd);border:none;background:var(--pri);color:#fff;cursor:pointer;transition:opacity 180ms}
 .btn-apply:hover{opacity:.85}
 .btn-sm{font-size:var(--txs);padding:2px 10px;border-radius:var(--rful);border:1px solid var(--brd);background:transparent;color:var(--muted);cursor:pointer;transition:all 180ms}
@@ -88,11 +85,21 @@ input[type=file]{display:none}
 
 /* DASHBOARD */
 #dashboard{display:none}
-main{padding:var(--s8);max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:var(--s8)}
+main{padding:var(--s8);max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:var(--s6)}
 .period-info{font-size:var(--txs);color:var(--muted);font-family:var(--fm);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
 .period-info span{background:var(--surO);border:1px solid var(--brd);border-radius:var(--rsm);padding:2px 8px}
 
-/* KPI CARDS */
+/* ── KPI CARDS section ── */
+.kpi-section{}
+.kpi-section-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--s3) var(--s1);margin-bottom:var(--s3);
+  cursor:pointer;border-radius:var(--rmd);
+  transition:background 150ms;
+}
+.kpi-section-hdr:hover{background:color-mix(in oklch,var(--pri) 5%,transparent)}
+.kpi-section-title{font-size:var(--tbs);font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:var(--s3)}
+.kpi-section-right{display:flex;align-items:center;gap:var(--s3)}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:var(--s4)}
 .kpi-card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rxl);padding:var(--s5);display:flex;flex-direction:column;gap:var(--s2);box-shadow:var(--shsm);transition:box-shadow 200ms}
 .kpi-card:hover{box-shadow:var(--shmd)}
@@ -104,11 +111,49 @@ main{padding:var(--s8);max-width:1440px;margin:0 auto;display:flex;flex-directio
 .c-up{color:var(--ok)}.c-warn{color:var(--wrn)}.c-crit{color:var(--err)}.c-nd{color:var(--faint)}
 .f-up{background:var(--ok)}.f-warn{background:var(--wrn)}.f-crit{background:var(--err)}.f-nd{background:var(--faint)}
 
-/* SECTION CARD */
+/* ── COLLAPSIBLE SECTION ── */
 .sec{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rxl);overflow:hidden;box-shadow:var(--shsm)}
-.sec-hdr{padding:var(--s4) var(--s6);border-bottom:1px solid var(--div);display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}
+
+/* Header cliquable */
+.sec-hdr{
+  padding:var(--s4) var(--s6);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  cursor:pointer;
+  user-select:none;
+  transition:background 150ms;
+  border-bottom:1px solid var(--div);
+}
+.sec-hdr:hover{background:color-mix(in oklch,var(--pri) 4%,var(--sur))}
+.sec[data-collapsed] .sec-hdr{border-bottom-color:transparent}
+.sec-hdr-left{display:flex;align-items:center;gap:var(--s3);min-width:0}
 .sec-title{font-size:var(--tbs);font-weight:600;letter-spacing:-.01em}
-.sec-badge{font-size:var(--txs);color:var(--muted);background:var(--surO);border:1px solid var(--brd);border-radius:var(--rful);padding:2px 10px}
+.sec-badge{font-size:var(--txs);color:var(--muted);background:var(--surO);border:1px solid var(--brd);border-radius:var(--rful);padding:2px 10px;white-space:nowrap}
+.sec-hdr-right{display:flex;align-items:center;gap:var(--s3);flex-shrink:0}
+
+/* Chevron */
+.chevron{
+  width:20px;height:20px;flex-shrink:0;
+  color:var(--muted);
+  transition:transform 280ms cubic-bezier(.16,1,.3,1),color 150ms;
+  display:flex;align-items:center;justify-content:center;
+}
+.sec-hdr:hover .chevron{color:var(--txt)}
+.sec[data-collapsed] .chevron{transform:rotate(-90deg)}
+
+/* Corps animé */
+.sec-body{
+  display:grid;
+  grid-template-rows:1fr;
+  transition:grid-template-rows 300ms cubic-bezier(.16,1,.3,1);
+  overflow:hidden;
+}
+.sec[data-collapsed] .sec-body{
+  grid-template-rows:0fr;
+}
+.sec-body-inner{
+  min-height:0;
+  overflow:hidden;
+}
 
 /* TABLE */
 .table-wrap{overflow-x:auto}
@@ -140,7 +185,6 @@ td{padding:var(--s3) var(--s5);font-size:var(--tsm);vertical-align:middle}
 /* HEATMAP */
 .heatmap-wrap{padding:var(--s6);overflow-x:auto}
 .heatmap-grid{display:grid;gap:2px}
-.hm-row{display:contents}
 .hm-label{font-size:var(--txs);font-weight:600;color:var(--muted);white-space:nowrap;padding-right:var(--s3);display:flex;align-items:center;letter-spacing:.02em}
 .hm-cell{width:100%;min-width:14px;height:22px;border-radius:3px;cursor:default;transition:opacity 150ms;position:relative}
 .hm-cell:hover{opacity:.8}
@@ -159,13 +203,18 @@ td{padding:var(--s3) var(--s5);font-size:var(--tsm);vertical-align:middle}
 .inc-dur{font-family:var(--fm);font-size:var(--txs);font-weight:600;flex-shrink:0;padding:2px 10px;border-radius:var(--rful);background:var(--errB);color:var(--err)}
 .inc-empty{padding:var(--s10);text-align:center;color:var(--faint);font-size:var(--tsm)}
 
+/* Collapse all bar */
+.section-controls{display:flex;align-items:center;gap:var(--s2);justify-content:flex-end}
+.btn-ctrl{font-size:var(--txs);padding:3px 12px;border-radius:var(--rful);border:1px solid var(--brd);background:transparent;color:var(--muted);cursor:pointer;transition:all 180ms;display:flex;align-items:center;gap:5px}
+.btn-ctrl:hover{border-color:var(--pri);color:var(--pri)}
+
 @media(max-width:768px){
   header{padding:var(--s3) var(--s4)}
   main{padding:var(--s4);gap:var(--s4)}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:var(--s3)}
   .tc{gap:var(--s1)}
+  .sec-hdr{padding:var(--s3) var(--s4)}
 }
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 </style>
 </head>
 <body>
@@ -260,65 +309,155 @@ td{padding:var(--s3) var(--s5);font-size:var(--tsm);vertical-align:middle}
 <!-- DASHBOARD -->
 <div id="dashboard">
 <main>
-  <div class="period-info">Période : <span id="period-lbl">—</span><span id="period-chk">—</span></div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-grid" id="kpi-grid"></div>
-
-  <!-- Heatmap -->
-  <div class="sec">
-    <div class="sec-hdr">
-      <span class="sec-title">Disponibilité par jour</span>
-      <span class="sec-badge" id="hm-badge"></span>
+  <!-- Barre période + contrôles -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s3)">
+    <div class="period-info">Période : <span id="period-lbl">—</span><span id="period-chk">—</span></div>
+    <div class="section-controls">
+      <button class="btn-ctrl" onclick="collapseAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+        Tout réduire
+      </button>
+      <button class="btn-ctrl" onclick="expandAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        Tout déplier
+      </button>
     </div>
-    <div class="heatmap-wrap">
-      <div id="heatmap"></div>
-      <div class="hm-legend">
-        <span class="hm-legend-swatch" style="background:var(--ok)"></span>100% UP
-        <span class="hm-legend-swatch" style="background:var(--wrn)"></span>Dégradé
-        <span class="hm-legend-swatch" style="background:var(--err)"></span>Incidents
-        <span class="hm-legend-swatch" style="background:var(--surO);border:1px solid var(--brd)"></span>No data
+  </div>
+
+  <!-- Section KPI Cards -->
+  <div class="sec" id="sec-kpi">
+    <div class="sec-hdr" onclick="toggleSec('sec-kpi')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="sec-title">Vue d’ensemble</span>
+      </div>
+      <div class="sec-hdr-right">
+        <span class="sec-badge" id="kpi-badge">—</span>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner" style="padding:var(--s6)">
+        <div class="kpi-grid" id="kpi-grid"></div>
       </div>
     </div>
   </div>
 
-  <!-- Incidents -->
-  <div class="sec">
-    <div class="sec-hdr">
-      <span class="sec-title">Chronologie des incidents</span>
-      <span class="sec-badge" id="inc-badge"></span>
+  <!-- Section Heatmap -->
+  <div class="sec" id="sec-heatmap">
+    <div class="sec-hdr" onclick="toggleSec('sec-heatmap')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="sec-title">Disponibilité par jour</span>
+      </div>
+      <div class="sec-hdr-right">
+        <span class="sec-badge" id="hm-badge">—</span>
+      </div>
     </div>
-    <div id="inc-list"></div>
+    <div class="sec-body">
+      <div class="sec-body-inner">
+        <div class="heatmap-wrap">
+          <div id="heatmap"></div>
+          <div class="hm-legend">
+            <span class="hm-legend-swatch" style="background:var(--ok)"></span>100% UP
+            <span class="hm-legend-swatch" style="background:var(--wrn)"></span>Dégradé
+            <span class="hm-legend-swatch" style="background:var(--err)"></span>Incidents
+            <span class="hm-legend-swatch" style="background:var(--surO);border:1px solid var(--brd)"></span>No data
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Table -->
-  <div class="sec">
-    <div class="sec-hdr">
-      <span class="sec-title">Détail par service</span>
-      <span class="sec-badge" id="tbl-badge">—</span>
+  <!-- Section Incidents -->
+  <div class="sec" id="sec-incidents">
+    <div class="sec-hdr" onclick="toggleSec('sec-incidents')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="sec-title">Chronologie des incidents</span>
+      </div>
+      <div class="sec-hdr-right">
+        <span class="sec-badge" id="inc-badge">—</span>
+      </div>
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th onclick="sortBy('service',this)">Service <i class="si">↕</i></th>
-          <th onclick="sortBy('pct',this)">Disponibilité <i class="si">↕</i></th>
-          <th onclick="sortBy('up',this)">UP <i class="si">↕</i></th>
-          <th onclick="sortBy('down',this)">DOWN <i class="si">↕</i></th>
-          <th onclick="sortBy('total',this)">Total checks <i class="si">↕</i></th>
-        </tr></thead>
-        <tbody id="kpi-tbody"></tbody>
-      </table>
+    <div class="sec-body">
+      <div class="sec-body-inner">
+        <div id="inc-list"></div>
+      </div>
     </div>
-    <div class="tbl-foot" id="tbl-foot"></div>
   </div>
+
+  <!-- Section Table -->
+  <div class="sec" id="sec-table">
+    <div class="sec-hdr" onclick="toggleSec('sec-table')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <span class="sec-title">Détail par service</span>
+      </div>
+      <div class="sec-hdr-right">
+        <span class="sec-badge" id="tbl-badge">—</span>
+      </div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th onclick="sortBy('service',this)">Service <i class="si">↕</i></th>
+              <th onclick="sortBy('pct',this)">Disponibilité <i class="si">↕</i></th>
+              <th onclick="sortBy('up',this)">UP <i class="si">↕</i></th>
+              <th onclick="sortBy('down',this)">DOWN <i class="si">↕</i></th>
+              <th onclick="sortBy('total',this)">Total checks <i class="si">↕</i></th>
+            </tr></thead>
+            <tbody id="kpi-tbody"></tbody>
+          </table>
+        </div>
+        <div class="tbl-foot" id="tbl-foot"></div>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 
 <script>
-// ══ STATE ══════════════════════════════════
+// ══ STATE ═══════════════════════════
 let RAW=[], SVC=[], DMIN=null, DMAX=null, SK='pct', SD=-1;
 
-// ══ CSV PARSER ═════════════════════════════
+// ══ COLLAPSE / EXPAND ══════════════════
+function toggleSec(id){
+  const sec=document.getElementById(id);
+  if(!sec)return;
+  const collapsed=sec.hasAttribute('data-collapsed');
+  if(collapsed)sec.removeAttribute('data-collapsed');
+  else sec.setAttribute('data-collapsed','');
+  const hdr=sec.querySelector('.sec-hdr');
+  if(hdr)hdr.setAttribute('aria-expanded',String(collapsed));
+}
+function collapseAll(){
+  document.querySelectorAll('.sec').forEach(s=>{
+    s.setAttribute('data-collapsed','');
+    const hdr=s.querySelector('.sec-hdr');
+    if(hdr)hdr.setAttribute('aria-expanded','false');
+  });
+}
+function expandAll(){
+  document.querySelectorAll('.sec').forEach(s=>{
+    s.removeAttribute('data-collapsed');
+    const hdr=s.querySelector('.sec-hdr');
+    if(hdr)hdr.setAttribute('aria-expanded','true');
+  });
+}
+
+// ══ CSV PARSER ══════════════════════════
 function stripBOM(t){return t.charCodeAt(0)===0xFEFF?t.slice(1):t}
 function detectSep(l){return(l.match(/\t/g)||[]).length>=(l.match(/,/g)||[]).length?'\t':','}
 function parseLine(line,sep){
@@ -359,7 +498,7 @@ function parseCSV(raw){
   return{rec,svc,sep,mn:new Date(mn),mx:new Date(mx)};
 }
 
-// ══ FILE ══════════════════════════════════
+// ══ FILE ════════════════════════════
 function handleFile(file){
   if(!file)return;
   const err=document.getElementById('upload-err');err.style.display='none';
@@ -389,28 +528,20 @@ function resetToUpload(){
   ['dragleave','drop'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.remove('drag-over');if(ev==='drop'&&e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);}));
 })();
 
-// ══ TIME HELPERS ══════════════════════════
+// ══ TIME HELPERS ════════════════════════
 function pad(n){return String(n).padStart(2,'0')}
 function toInput(d){return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
 function fmtDt(d){return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function fmtDay(d){return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}
-
-// Résoudre une valeur de plage Grafana vers { from, to }
 function resolveRange(val){
   const ref=DMAX||new Date();
   const t=ref.getTime();
-  const MAP={
-    '5m':5*60000,'15m':15*60000,'30m':30*60000,
-    '1h':3600000,'3h':3*3600000,'6h':6*3600000,'12h':12*3600000,'24h':24*3600000,
-    '2d':2*86400000,'7d':7*86400000,'30d':30*86400000,'90d':90*86400000,
-    '6M':180*86400000,'1y':365*86400000,'2y':2*365*86400000,'5y':5*365*86400000
-  };
-  const ms=MAP[val];
-  if(!ms)return null;
+  const MAP={'5m':5*60000,'15m':15*60000,'30m':30*60000,'1h':3600000,'3h':3*3600000,'6h':6*3600000,'12h':12*3600000,'24h':24*3600000,'2d':2*86400000,'7d':7*86400000,'30d':30*86400000,'90d':90*86400000,'6M':180*86400000,'1y':365*86400000,'2y':2*365*86400000,'5y':5*365*86400000};
+  const ms=MAP[val];if(!ms)return null;
   return{from:new Date(Math.max(t-ms,DMIN.getTime())),to:ref};
 }
 
-// ══ INIT ══════════════════════════════════
+// ══ INIT ════════════════════════════
 function initDash(filename,sep){
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dashboard').style.display='block';
@@ -419,31 +550,27 @@ function initDash(filename,sep){
   document.getElementById('file-label').textContent=filename.split(/[\/\\]/).pop();
   const si=document.getElementById('sep-info');
   si.textContent=sep==='\t'?'sep: TAB':'sep: ,';
-  si.title=`Séparateur : ${sep==='\t'?'tabulation':'virgule'}`;
-
-  // Choisir la plage par défaut la plus adaptée
+  expandAll();
   const rangeMs=DMAX-DMIN;
-  let defaultVal='24h';
-  if(rangeMs<=5*60000)defaultVal='5m';
-  else if(rangeMs<=30*60000)defaultVal='30m';
-  else if(rangeMs<=3600000)defaultVal='1h';
-  else if(rangeMs<=6*3600000)defaultVal='6h';
-  else if(rangeMs<=2*86400000)defaultVal='2d';
-  else if(rangeMs<=7*86400000)defaultVal='7d';
-  else if(rangeMs<=30*86400000)defaultVal='30d';
-  else defaultVal='90d';
-
-  document.getElementById('range-select').value=defaultVal;
-  applyRangePreset(defaultVal);
+  let dv='24h';
+  if(rangeMs<=5*60000)dv='5m';
+  else if(rangeMs<=30*60000)dv='30m';
+  else if(rangeMs<=3600000)dv='1h';
+  else if(rangeMs<=6*3600000)dv='6h';
+  else if(rangeMs<=2*86400000)dv='2d';
+  else if(rangeMs<=7*86400000)dv='7d';
+  else if(rangeMs<=30*86400000)dv='30d';
+  else dv='90d';
+  document.getElementById('range-select').value=dv;
+  applyRangePreset(dv);
 }
 
-// ══ RANGE SELECT ══════════════════════════
+// ══ RANGE ════════════════════════════
 function onRangeSelect(sel){
   const val=sel.value;
   const ci=document.getElementById('custom-inputs');
   if(val==='custom'){
     ci.style.display='flex';
-    // pré-remplir avec toute la plage
     document.getElementById('date-from').value=toInput(DMIN);
     document.getElementById('date-to').value=toInput(DMAX);
   }else{
@@ -451,13 +578,9 @@ function onRangeSelect(sel){
     applyRangePreset(val);
   }
 }
-function applyRangePreset(val){
-  const r=resolveRange(val);
-  if(!r)return;
-  refresh(r.from,r.to);
-}
+function applyRangePreset(val){const r=resolveRange(val);if(r)refresh(r.from,r.to);}
 
-// ══ KPI COMPUTE ════════════════════════════
+// ══ KPI COMPUTE ════════════════════════
 function computeKPIs(from,to){
   return SVC.map(name=>{
     let up=0,dn=0,tot=0;
@@ -471,82 +594,64 @@ function computeKPIs(from,to){
   });
 }
 
-// ══ HEATMAP ════════════════════════════════
+// ══ HEATMAP ════════════════════════════
 function computeHeatmap(from,to){
-  // Jours couverts
   const days=[];
   const d0=new Date(from);d0.setHours(0,0,0,0);
   const d1=new Date(to);d1.setHours(23,59,59,999);
   for(let d=new Date(d0);d<=d1;d=new Date(d.getTime()+86400000))days.push(new Date(d));
-
-  // Pour chaque service × jour → {up,dn,tot}
   const data={};
   SVC.forEach(s=>{
     data[s]={};
-    days.forEach(day=>{
-      const key=day.toDateString();
-      data[s][key]={up:0,dn:0,tot:0};
-    });
+    days.forEach(day=>{const key=day.toDateString();data[s][key]={up:0,dn:0,tot:0};});
   });
   for(const row of RAW){
     if(row._t<from||row._t>to)continue;
-    const key=new Date(row._t).setHours(0,0,0,0);
-    const dk=new Date(key).toDateString();
+    const dk=new Date(new Date(row._t).setHours(0,0,0,0)).toDateString();
     SVC.forEach(s=>{
       const v=row[s];if(v===null)return;
       data[s][dk].tot++;
-      if(v==='UP')data[s][dk].up++;
-      else if(v==='DOWN')data[s][dk].dn++;
+      if(v==='UP')data[s][dk].up++;else if(v==='DOWN')data[s][dk].dn++;
     });
   }
   return{data,days};
 }
-
-function hmColor(cell,alpha){
+function hmColor(cell){
   if(!cell||cell.tot===0)return null;
   const pct=cell.up/cell.tot*100;
-  if(pct>=99.5)return getComputedStyle(document.documentElement).getPropertyValue('--ok').trim();
-  if(pct>=95) return getComputedStyle(document.documentElement).getPropertyValue('--wrn').trim();
-  return getComputedStyle(document.documentElement).getPropertyValue('--err').trim();
+  const cs=getComputedStyle(document.documentElement);
+  if(pct>=99.5)return cs.getPropertyValue('--ok').trim();
+  if(pct>=95) return cs.getPropertyValue('--wrn').trim();
+  return cs.getPropertyValue('--err').trim();
 }
-
 function renderHeatmap(from,to){
   const{data,days}=computeHeatmap(from,to);
   const el=document.getElementById('heatmap');
   if(!days.length){el.innerHTML='<div style="padding:var(--s6);color:var(--faint);font-size:var(--txs)">Aucune donnée</div>';return;}
-
-  const nCols=days.length+1; // +1 colonne label
   const colW=Math.max(14,Math.min(40,Math.floor((el.parentElement.offsetWidth-200)/days.length)));
-
   let html=`<div class="heatmap-grid" style="grid-template-columns:180px repeat(${days.length},${colW}px)">`;
-
-  // Header row : dates
   html+='<div class="hm-label" style="font-size:9px;color:var(--faint)">Service</div>';
   days.forEach(d=>{
     const lbl=days.length<=31?fmtDay(d):(days.length<=90?fmtDay(d):`${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(2)}`);
     html+=`<div class="hm-colhdr">${lbl}</div>`;
   });
-
   SVC.forEach(s=>{
     const name=shortName(s);
     html+=`<div class="hm-label" title="${s}">${name}</div>`;
     days.forEach(d=>{
-      const key=d.toDateString();
-      const cell=data[s][key];
+      const cell=data[s][d.toDateString()];
       const col=hmColor(cell);
       const style=col?`background:${col}`:`background:var(--surO);border:1px solid var(--brd)`;
       const pct=cell&&cell.tot>0?(cell.up/cell.tot*100).toFixed(1)+'%':'—';
-      const tip=`${name} · ${fmtDay(d)} : ${pct} (${cell?cell.up:0} UP / ${cell?cell.dn:0} DOWN)`;
-      html+=`<div class="hm-cell" style="${style}" title="${tip}"></div>`;
+      html+=`<div class="hm-cell" style="${style}" title="${name} · ${fmtDay(d)} : ${pct} (${cell?cell.up:0} UP / ${cell?cell.dn:0} DOWN)"></div>`;
     });
   });
-
   html+='</div>';
   el.innerHTML=html;
   document.getElementById('hm-badge').textContent=`${days.length} jour${days.length>1?'s':''}`;
 }
 
-// ══ INCIDENTS ══════════════════════════════
+// ══ INCIDENTS ═══════════════════════════
 function computeIncidents(from,to){
   const incidents=[];
   SVC.forEach(s=>{
@@ -557,32 +662,22 @@ function computeIncidents(from,to){
       if(v==='DOWN'&&!start)start=row._t;
       if((v!=='DOWN'||i===rows.length-1)&&start){
         const end=v!=='DOWN'?row._t:new Date(row._t.getTime()+3600000);
-        const durMs=end-start;
-        const durH=Math.round(durMs/3600000*10)/10;
-        incidents.push({service:s,start:new Date(start),end,durMs,durH});
+        incidents.push({service:s,start:new Date(start),end,durH:Math.round((end-start)/360000)/10});
         start=null;
       }
     });
-    if(start){
-      const end=to;
-      const durMs=end-start;
-      incidents.push({service:s,start:new Date(start),end,durMs,durH:Math.round(durMs/3600000*10)/10});
-    }
+    if(start){const end=to;incidents.push({service:s,start:new Date(start),end,durH:Math.round((end-start)/360000)/10});}
   });
   incidents.sort((a,b)=>b.start-a.start);
   return incidents;
 }
-
 function renderIncidents(from,to){
   const incs=computeIncidents(from,to);
   const el=document.getElementById('inc-list');
   document.getElementById('inc-badge').textContent=`${incs.length} incident${incs.length!==1?'s':''}`;
-  if(!incs.length){
-    el.innerHTML='<div class="inc-empty">✓ Aucun incident sur cette période</div>';
-    return;
-  }
-  const rows=incs.map(inc=>{
-    const dur=inc.durH>=24?`${(inc.durH/24).toFixed(1)} j`:`${inc.durH} h`;
+  if(!incs.length){el.innerHTML='<div class="inc-empty">✓ Aucun incident sur cette période</div>';return;}
+  el.innerHTML=`<div class="inc-list">${incs.map(inc=>{
+    const dur=inc.durH>=24?`${(inc.durH/24).toFixed(1)} j`:`${inc.durH} h`;
     return`<div class="inc-item">
       <span class="inc-dot" style="background:var(--err)"></span>
       <div class="inc-body">
@@ -591,11 +686,10 @@ function renderIncidents(from,to){
       </div>
       <span class="inc-dur">${dur}</span>
     </div>`;
-  }).join('');
-  el.innerHTML=`<div class="inc-list">${rows}</div>`;
+  }).join('')}</div>`;
 }
 
-// ══ TABLE ══════════════════════════════════
+// ══ TABLE ══════════════════════════════
 function renderTable(data,from,to){
   const sorted=[...data].sort((a,b)=>{
     const va=a[SK],vb=b[SK];
@@ -604,57 +698,52 @@ function renderTable(data,from,to){
     return typeof va==='string'?va.localeCompare(vb)*SD:(va-vb)*SD;
   });
   let tU=0,tD=0,tT=0;
-  const rows=sorted.map(d=>{
-    const c=cls(d.pct);
-    const pl=d.pct!==null?d.pct.toFixed(2)+'%':'—';
-    const w=d.pct!==null?d.pct:0;
-    const fc=c==='nodata'?'':'f-'+c;
+  document.getElementById('kpi-tbody').innerHTML=sorted.map(d=>{
+    const c=cls(d.pct),pl=d.pct!==null?d.pct.toFixed(2)+'%':'—',w=d.pct!==null?d.pct:0;
     tU+=d.up;tD+=d.down;tT+=d.total;
     return`<tr>
       <td class="td-svc" title="${d.service}">${shortName(d.service)}</td>
       <td><div class="av-bar">
-        <div class="av-trk"><div class="av-fill ${fc}" style="width:${w}%"></div></div>
+        <div class="av-trk"><div class="av-fill ${c!=='nodata'?'f-'+c:''}" style="width:${w}%"></div></div>
         <span class="av-pct c-${c}">${pl}</span>
         <span class="badge ${BC[c]}">${BL[c]}</span>
       </div></td>
       <td class="td-n">${d.up}</td>
-      <td class="td-n${d.down>0?' dn':''} ">${d.down}</td>
+      <td class="td-n${d.down>0?' dn':''}">${d.down}</td>
       <td class="td-n">${d.total}</td>
     </tr>`;
-  }).join('');
-  document.getElementById('kpi-tbody').innerHTML=rows||'<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:2rem">Aucune donnée</td></tr>';
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:2rem">Aucune donnée</td></tr>';
   document.getElementById('tbl-badge').textContent=`${sorted.length} service${sorted.length>1?'s':''}`;
   document.getElementById('period-lbl').textContent=`${fmtDt(from)} → ${fmtDt(to)}`;
   document.getElementById('period-chk').textContent=`${tT} vérification${tT>1?'s':''}`;
   document.getElementById('tbl-foot').innerHTML=`
-    <div class="fstat"><span class="fdot" style="background:var(--ok)"></span>UP : ${tU}</div>
-    <div class="fstat"><span class="fdot" style="background:var(--err)"></span>DOWN : ${tD}</div>
-    <div class="fstat"><span class="fdot" style="background:var(--faint)"></span>Total : ${tT}</div>`;
+    <div class="fstat"><span class="fdot" style="background:var(--ok)"></span>UP : ${tU}</div>
+    <div class="fstat"><span class="fdot" style="background:var(--err)"></span>DOWN : ${tD}</div>
+    <div class="fstat"><span class="fdot" style="background:var(--faint)"></span>Total : ${tT}</div>`;
 }
 
-// ══ RENDER CARDS ══════════════════════════
+// ══ RENDER CARDS ════════════════════════
 function renderCards(data){
-  document.getElementById('kpi-grid').innerHTML=data.map(d=>{
-    const c=cls(d.pct);
-    const lbl=d.pct!==null?d.pct.toFixed(2)+'%':'No data';
-    const w=d.pct!==null?d.pct:0;
-    const meta=d.total>0?`${d.up} UP · ${d.down} DOWN · ${d.total} checks`:'Aucune donnée';
+  const grid=document.getElementById('kpi-grid');
+  grid.innerHTML=data.map(d=>{
+    const c=cls(d.pct),lbl=d.pct!==null?d.pct.toFixed(2)+'%':'No data',w=d.pct!==null?d.pct:0;
     return`<div class="kpi-card">
       <div class="kpi-name" title="${d.service}">${shortName(d.service)}</div>
       <div class="kpi-val c-${c}">${lbl}</div>
-      <div class="kpi-meta">${meta}</div>
+      <div class="kpi-meta">${d.total>0?`${d.up} UP · ${d.down} DOWN · ${d.total} checks`:'Aucune donnée'}</div>
       <div class="kpi-bar"><div class="kpi-fill f-${c==='nodata'?'nd':c}" style="width:${w}%"></div></div>
     </div>`;
   }).join('');
+  document.getElementById('kpi-badge').textContent=`${data.length} service${data.length>1?'s':''}`;
 }
 
-// ══ HELPERS ════════════════════════════════
+// ══ HELPERS ════════════════════════════
 function shortName(s){return s.replace(/^Service status of\s*/i,'')}
 function cls(p){if(p===null)return'nodata';if(p>=99.5)return'up';if(p>=95)return'warn';return'crit'}
 const BL={up:'Opérationnel',warn:'Dégradé',crit:'Indisponible',nodata:'No data'};
 const BC={up:'b-up',warn:'b-wn',crit:'b-dn',nodata:'b-nd'};
 
-// ══ MAIN REFRESH ══════════════════════════
+// ══ MAIN REFRESH ═══════════════════════
 function refresh(from,to){
   const data=computeKPIs(from,to);
   renderCards(data);
@@ -662,26 +751,22 @@ function refresh(from,to){
   renderIncidents(from,to);
   renderTable(data,from,to);
 }
-
 function applyFilter(){
   const fv=document.getElementById('date-from').value;
   const tv=document.getElementById('date-to').value;
   if(!fv||!tv)return;
   const from=new Date(fv),to=new Date(tv);
-  if(isNaN(from)||isNaN(to))return;
-  refresh(from,to);
+  if(!isNaN(from)&&!isNaN(to))refresh(from,to);
 }
-
 function sortBy(key,th){
   if(SK===key)SD*=-1;else{SK=key;SD=key==='service'?1:-1;}
   document.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));
   th.classList.add('sorted');
   const sel=document.getElementById('range-select');
-  if(sel.value==='custom')applyFilter();
-  else applyRangePreset(sel.value);
+  if(sel.value==='custom')applyFilter();else applyRangePreset(sel.value);
 }
 
-// ══ THEME ══════════════════════════════════
+// ══ THEME ════════════════════════════
 function toggleTheme(){
   const html=document.documentElement;
   const next=html.getAttribute('data-theme')==='dark'?'light':'dark';
@@ -690,7 +775,6 @@ function toggleTheme(){
     ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
     :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
   document.querySelectorAll('.btn-icon').forEach(b=>b.innerHTML=icon);
-  // Redraw heatmap avec nouvelles couleurs
   const sel=document.getElementById('range-select');
   if(RAW.length&&sel.value!=='custom')applyRangePreset(sel.value);
   else if(RAW.length)applyFilter();
