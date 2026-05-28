@@ -117,7 +117,7 @@
     .upload-card{
       background:var(--color-surface);border:2px dashed var(--color-border);
       border-radius:var(--radius-xl);padding:var(--sp12) var(--sp10);
-      text-align:center;max-width:520px;width:100%;
+      text-align:center;max-width:540px;width:100%;
       transition:border-color 200ms,background 200ms;
       box-shadow:var(--shadow-md);
     }
@@ -126,7 +126,7 @@
     }
     .upload-icon{margin:0 auto var(--sp6);color:var(--color-text-faint)}
     .upload-title{font-size:var(--tx-lg);font-weight:600;margin-bottom:var(--sp2);letter-spacing:-.01em}
-    .upload-desc{font-size:var(--tx-sm);color:var(--color-text-muted);margin-bottom:var(--sp6);max-width:38ch;margin-inline:auto}
+    .upload-desc{font-size:var(--tx-sm);color:var(--color-text-muted);margin-bottom:var(--sp6);max-width:40ch;margin-inline:auto}
     .upload-desc code{
       font-family:var(--font-mono);font-size:var(--tx-xs);
       background:var(--color-surface-offset);padding:1px 5px;
@@ -143,25 +143,25 @@
     .upload-hint{
       margin-top:var(--sp4);font-size:var(--tx-xs);color:var(--color-text-faint);
     }
+    .upload-formats{
+      margin-top:var(--sp4);font-size:var(--tx-xs);color:var(--color-text-faint);
+      display:flex;justify-content:center;gap:var(--sp3);
+    }
+    .upload-formats span{
+      background:var(--color-surface-offset);border:1px solid var(--color-border);
+      border-radius:var(--radius-sm);padding:1px 8px;
+    }
     .upload-error{
       margin-top:var(--sp4);padding:var(--sp3) var(--sp4);
       background:var(--color-error-bg);border:1px solid var(--color-error);
       border-radius:var(--radius-md);color:var(--color-error);
-      font-size:var(--tx-xs);display:none;
+      font-size:var(--tx-xs);display:none;text-align:left;word-break:break-word;
     }
 
     /* ── DASHBOARD ── */
     #dashboard{display:none}
     main{padding:var(--sp8);max-width:1440px;margin:0 auto}
 
-    /* filename chip */
-    .file-chip{
-      display:inline-flex;align-items:center;gap:var(--sp2);
-      font-family:var(--font-mono);font-size:var(--tx-xs);
-      background:var(--color-surface-offset);border:1px solid var(--color-border);
-      border-radius:var(--radius-full);padding:2px 10px;
-      color:var(--color-text-muted);
-    }
     .btn-reload{
       font-size:var(--tx-xs);padding:2px 10px;
       border-radius:var(--radius-full);border:1px solid var(--color-border);
@@ -288,6 +288,14 @@
     .footer-stat{display:flex;gap:var(--sp2);align-items:center}
     .footer-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 
+    /* ── SEPARATOR TAG ── */
+    .sep-badge{
+      font-size:var(--tx-xs);font-family:var(--font-mono);
+      background:var(--color-primary-light);color:var(--color-primary);
+      border-radius:var(--radius-sm);padding:1px 7px;
+      border:1px solid color-mix(in oklch,var(--color-primary) 30%,transparent);
+    }
+
     /* ── RESPONSIVE ── */
     @media(max-width:768px){
       header{padding:var(--sp3) var(--sp4)}
@@ -296,7 +304,6 @@
       .time-controls{gap:var(--sp1)}
     }
 
-    /* ── SHIMMER (loading state) ── */
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
     .skeleton{
       background:linear-gradient(90deg,var(--color-surface-offset) 25%,var(--color-surface-2) 50%,var(--color-surface-offset) 75%);
@@ -323,7 +330,6 @@
   </div>
 
   <div class="header-right" id="header-controls" style="display:none">
-    <!-- Time controls -->
     <div class="time-controls">
       <div class="presets">
         <button class="btn-preset" onclick="applyPreset(1,this)">1h</button>
@@ -342,13 +348,13 @@
       </div>
       <button class="btn-apply" onclick="applyFilter()">Appliquer</button>
     </div>
+    <span id="sep-info" class="sep-badge" title="Séparateur détecté automatiquement"></span>
     <button class="btn-reload" onclick="resetToUpload()" title="Charger un autre fichier">↩ Changer</button>
     <button class="btn-theme" onclick="toggleTheme()" aria-label="Changer de thème">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
   </div>
 
-  <!-- Theme toggle visible on upload screen -->
   <button class="btn-theme" id="theme-btn-upload" onclick="toggleTheme()" aria-label="Changer de thème">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </button>
@@ -366,8 +372,8 @@
     </div>
     <h1 class="upload-title">Charger un fichier CSV</h1>
     <p class="upload-desc">
-      Export Grafana au format <code>Join by field</code>.<br>
-      Première colonne <code>Time</code>, valeurs <code>UP</code> / <code>DOWN</code> / vide / <code>No data</code>.
+      Export Grafana (format <code>Join by field</code> ou standard).<br>
+      Première colonne <code>Time</code> — séparateur <code>,</code> ou <code>TAB</code> détecté automatiquement.
     </p>
     <button class="btn-upload" onclick="document.getElementById('file-input').click()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -376,8 +382,13 @@
       </svg>
       Sélectionner un fichier
     </button>
-    <input type="file" id="file-input" accept=".csv,text/csv" onchange="handleFile(this.files[0])">
+    <input type="file" id="file-input" accept=".csv,.tsv,text/csv,text/tab-separated-values" onchange="handleFile(this.files[0])">
     <p class="upload-hint">ou glisser-déposer le fichier ici</p>
+    <div class="upload-formats">
+      <span>CSV virgule</span>
+      <span>CSV tabulation (TSV)</span>
+      <span>UTF-8 BOM ✓</span>
+    </div>
     <div class="upload-error" id="upload-error"></div>
   </div>
 </div>
@@ -390,11 +401,7 @@
       <span id="period-label">—</span>
       <span id="period-checks">—</span>
     </div>
-
-    <!-- KPI Cards -->
     <div class="kpi-grid" id="kpi-grid"></div>
-
-    <!-- Table -->
     <div class="table-section">
       <div class="table-header">
         <span class="table-title">Détail par service</span>
@@ -423,23 +430,63 @@
 // ════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════
-let RAW = [];           // parsed rows [{Time: Date, colA: 'UP'|'DOWN'|null, ...}]
-let SERVICE_NAMES = []; // column names (without 'Time')
+let RAW = [];
+let SERVICE_NAMES = [];
 let DATA_MIN = null;
 let DATA_MAX = null;
 let sortKey = 'pct';
 let sortDir = -1;
-let activePresetBtn = null;
 
 // ════════════════════════════════════════════
-//  CSV PARSING
+//  CSV PARSING  —  robuste
+//  Gère : BOM UTF-8, séparateur , ou TAB,
+//         champs entre guillemets doubles,
+//         valeurs vides et "No data"
 // ════════════════════════════════════════════
 
 /**
- * Normalize a cell value:
- * - empty string → null
- * - 'No data' (case-insensitive) → null
- * - otherwise → trimmed string
+ * Supprime le BOM UTF-8 (\uFEFF) en début de chaîne.
+ */
+function stripBOM(text) {
+  return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+}
+
+/**
+ * Détecte le séparateur dominant sur la première ligne : TAB ou virgule.
+ */
+function detectSeparator(firstLine) {
+  const tabs = (firstLine.match(/\t/g) || []).length;
+  const commas = (firstLine.match(/,/g) || []).length;
+  return tabs >= commas ? '\t' : ',';
+}
+
+/**
+ * Parse une ligne CSV avec un séparateur donné.
+ * Gère les champs entre guillemets doubles (dont guillemets doublés).
+ */
+function parseLine(line, sep) {
+  const result = [];
+  let cur = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQuote = !inQuote;
+    } else if (ch === sep && !inQuote) {
+      result.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+/**
+ * Normalise une valeur de cellule :
+ * - vide ou "No data" (insensible à la casse) → null
+ * - sinon → chaîne nettoyée
  */
 function normalizeCell(v) {
   if (!v) return null;
@@ -449,41 +496,32 @@ function normalizeCell(v) {
 }
 
 /**
- * Parse a CSV string into RAW records.
- * Assumes first column is 'Time' and remaining columns are service names.
- * Handles quoted fields.
+ * Parse le texte CSV complet et retourne les records + métadonnées.
  */
-function parseCSV(text) {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+function parseCSV(rawText) {
+  // 1. Supprimer BOM + normaliser fins de ligne
+  const text = stripBOM(rawText).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = text.split('\n');
 
-  // Parse a single CSV line respecting quoted fields
-  function parseLine(line) {
-    const result = [];
-    let cur = '';
-    let inQuote = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
-        else inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        result.push(cur); cur = '';
-      } else {
-        cur += ch;
-      }
-    }
-    result.push(cur);
-    return result;
-  }
+  // 2. Détecter le séparateur sur la première ligne non vide
+  const firstLine = lines[0] || '';
+  const sep = detectSeparator(firstLine);
 
-  const headers = parseLine(lines[0]).map(h => h.trim());
+  // 3. Parser les en-têtes
+  const headers = parseLine(firstLine, sep).map(h => h.trim());
 
-  // Validate: first column must be 'Time' (case-insensitive)
+  // 4. Valider : première colonne = "Time"
   if (!headers[0] || headers[0].toLowerCase() !== 'time') {
-    throw new Error(`La première colonne doit être "Time". Trouvé : "${headers[0]}"`);
+    // Fournir un message d'erreur court et utile
+    const found = headers[0] || '(vide)';
+    throw new Error(
+      `Première colonne attendue : "Time". Trouvé : "${found}".\n` +
+      `Séparateur détecté : ${sep === '\t' ? 'TAB' : 'virgule'}.\n` +
+      `Vérifiez que la première ligne contient bien les en-têtes.`
+    );
   }
   if (headers.length < 2) {
-    throw new Error('Le fichier CSV doit contenir au moins une colonne de service.');
+    throw new Error('Le CSV doit contenir au moins une colonne de service (en plus de Time).');
   }
 
   const serviceNames = headers.slice(1);
@@ -493,12 +531,12 @@ function parseCSV(text) {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    const cells = parseLine(line);
+    const cells = parseLine(line, sep);
 
-    // Parse timestamp
+    // Parser le timestamp ("YYYY-MM-DD HH:MM:SS" ou ISO)
     const rawTs = cells[0] ? cells[0].trim() : '';
     const ts = new Date(rawTs.replace(' ', 'T'));
-    if (isNaN(ts.getTime())) continue; // skip unparseable rows
+    if (isNaN(ts.getTime())) continue;
 
     const row = { _time: ts };
     for (let j = 0; j < serviceNames.length; j++) {
@@ -511,9 +549,17 @@ function parseCSV(text) {
     if (t > maxTs) maxTs = t;
   }
 
-  if (records.length === 0) throw new Error('Aucune ligne de données valide trouvée.');
+  if (records.length === 0) {
+    throw new Error('Aucune ligne de données valide trouvée dans le fichier.');
+  }
 
-  return { records, serviceNames, minTs: new Date(minTs), maxTs: new Date(maxTs) };
+  return {
+    records,
+    serviceNames,
+    separator: sep,
+    minTs: new Date(minTs),
+    maxTs: new Date(maxTs)
+  };
 }
 
 // ════════════════════════════════════════════
@@ -528,12 +574,12 @@ function handleFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const { records, serviceNames, minTs, maxTs } = parseCSV(e.target.result);
+      const { records, serviceNames, separator, minTs, maxTs } = parseCSV(e.target.result);
       RAW = records;
       SERVICE_NAMES = serviceNames;
       DATA_MIN = minTs;
       DATA_MAX = maxTs;
-      initDashboard(file.name);
+      initDashboard(file.name, separator);
     } catch (err) {
       errEl.textContent = '⚠ ' + err.message;
       errEl.style.display = 'block';
@@ -559,12 +605,12 @@ function resetToUpload() {
 
 (function setupDragDrop() {
   const zone = document.getElementById('drop-zone');
-  ['dragenter','dragover'].forEach(e => zone.addEventListener(e, ev => {
-    ev.preventDefault(); zone.classList.add('drag-over');
+  ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); zone.classList.add('drag-over');
   }));
-  ['dragleave','drop'].forEach(e => zone.addEventListener(e, ev => {
-    ev.preventDefault(); zone.classList.remove('drag-over');
-    if (e === 'drop' && ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    if (ev === 'drop' && e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
   }));
 })();
 
@@ -580,29 +626,33 @@ function fmtDt(d) {
   return d.toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-function initDashboard(filename) {
+function initDashboard(filename, separator) {
   document.getElementById('upload-screen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
   document.getElementById('header-controls').style.display = 'flex';
   document.getElementById('theme-btn-upload').style.display = 'none';
 
-  // Show filename (strip path)
   const name = filename.split(/[\/\\]/).pop();
   document.getElementById('file-label').textContent = name;
 
-  // Default: show full range (up to 24h)
+  // Afficher le séparateur détecté
+  const sepEl = document.getElementById('sep-info');
+  sepEl.textContent = separator === '\t' ? 'sep: TAB' : 'sep: ,';
+  sepEl.title = `Séparateur détecté automatiquement : ${separator === '\t' ? 'tabulation' : 'virgule'}`;
+
+  // Plage par défaut
   const rangeMs = DATA_MAX - DATA_MIN;
-  const defaultHours = rangeMs <= 3600000 ? 1 : rangeMs <= 21600000 ? 6 : rangeMs <= 86400000 ? 24 : 24;
+  const defaultHours = rangeMs <= 3600000 ? 1 : rangeMs <= 21600000 ? 6 : 24;
   const from = new Date(DATA_MAX.getTime() - defaultHours * 3600000);
   const safeFrom = from < DATA_MIN ? DATA_MIN : from;
 
   document.getElementById('date-from').value = toLocalInput(safeFrom);
   document.getElementById('date-to').value = toLocalInput(DATA_MAX);
 
-  // Activate appropriate preset button
   const presetMap = {1:0,6:1,12:2,24:3};
-  const presetIdx = presetMap[defaultHours];
-  document.querySelectorAll('.btn-preset').forEach((b, i) => b.classList.toggle('active', i === (presetIdx ?? 3)));
+  document.querySelectorAll('.btn-preset').forEach((b, i) =>
+    b.classList.toggle('active', i === (presetMap[defaultHours] ?? 3))
+  );
 
   applyFilter();
 }
@@ -621,7 +671,6 @@ function computeKPIs(from, to) {
       total++;
       if (v === 'UP') up++;
       else if (v === 'DOWN') down++;
-      // other non-null values counted in total but not up/down
     }
     const pct = total > 0 ? Math.round(up / total * 10000) / 100 : null;
     return { service: name, up, down, total, pct };
@@ -639,25 +688,27 @@ function cls(pct) {
   return 'crit';
 }
 const BADGE_LABELS = { up:'Opérationnel', warn:'Dégradé', crit:'Indisponible', nodata:'No data' };
-const BADGE_CLS = { up:'badge-up', warn:'badge-warn', crit:'badge-down', nodata:'badge-nodata' };
+const BADGE_CLS   = { up:'badge-up', warn:'badge-warn', crit:'badge-down', nodata:'badge-nodata' };
 
 // ════════════════════════════════════════════
 //  RENDER
 // ════════════════════════════════════════════
+
+function shortName(s) {
+  return s.replace(/^Service status of\s*/i, '');
+}
 
 function renderCards(data) {
   document.getElementById('kpi-grid').innerHTML = data.map(d => {
     const c = cls(d.pct);
     const lbl = d.pct !== null ? d.pct.toFixed(2) + '%' : 'No data';
     const w = d.pct !== null ? d.pct : 0;
-    const fc = c === 'nodata' ? 'fill-nodata' : 'fill-' + (c === 'nodata' ? 'up' : c);
+    const fc = 'fill-' + (c === 'nodata' ? 'nodata' : c);
     const meta = d.total > 0
       ? `${d.up} UP · ${d.down} DOWN · ${d.total} checks`
       : 'Aucune donnée sur la période';
-    // Short display name: remove 'Service status of ' prefix if present
-    const shortName = d.service.replace(/^Service status of\s*/i, '');
     return `<div class="kpi-card">
-      <div class="kpi-card-name" title="${d.service}">${shortName}</div>
+      <div class="kpi-card-name" title="${d.service}">${shortName(d.service)}</div>
       <div class="kpi-card-value cls-${c}">${lbl}</div>
       <div class="kpi-card-meta">${meta}</div>
       <div class="kpi-card-bar"><div class="kpi-card-bar-fill ${fc}" style="width:${w}%"></div></div>
@@ -682,9 +733,8 @@ function renderTable(data, from, to) {
     const w = d.pct !== null ? d.pct : 0;
     const fc = c === 'nodata' ? '' : 'fill-' + c;
     tUp += d.up; tDown += d.down; tTotal += d.total;
-    const shortName = d.service.replace(/^Service status of\s*/i, '');
     return `<tr>
-      <td class="td-service" title="${d.service}">${shortName}</td>
+      <td class="td-service" title="${d.service}">${shortName(d.service)}</td>
       <td><div class="avail-bar">
         <div class="avail-track"><div class="avail-fill ${fc}" style="width:${w}%"></div></div>
         <span class="avail-pct cls-${c}">${pctLbl}</span>
@@ -715,8 +765,7 @@ function applyFilter() {
   const fv = document.getElementById('date-from').value;
   const tv = document.getElementById('date-to').value;
   if (!fv || !tv) return;
-  const from = new Date(fv);
-  const to = new Date(tv);
+  const from = new Date(fv), to = new Date(tv);
   if (isNaN(from) || isNaN(to)) return;
   const data = computeKPIs(from, to);
   renderCards(data);
@@ -726,11 +775,10 @@ function applyFilter() {
 function applyPreset(hours, btn) {
   document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const dmax = DATA_MAX;
-  let from = new Date(dmax.getTime() - hours * 3600000);
+  let from = new Date(DATA_MAX.getTime() - hours * 3600000);
   if (from < DATA_MIN) from = DATA_MIN;
   document.getElementById('date-from').value = toLocalInput(from);
-  document.getElementById('date-to').value = toLocalInput(dmax);
+  document.getElementById('date-to').value = toLocalInput(DATA_MAX);
   applyFilter();
 }
 
