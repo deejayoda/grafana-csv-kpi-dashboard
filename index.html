@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grafana CSV — KPI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── TOKENS ── */
+    :root, [data-theme="light"] {
+      --color-bg: #f7f6f2;
+      --color-surface: #f9f8f5;
+      --color-surface-2: #fbfbf9;
+      --color-surface-offset: #f0ede8;
+      --color-border: #d4d1ca;
+      --color-divider: #dcd9d5;
+      --color-text: #28251d;
+      --color-text-muted: #7a7974;
+      --color-text-faint: #bab9b4;
+      --color-primary: #01696f;
+      --color-primary-light: #cedcd8;
+      --color-success: #437a22;
+      --color-success-bg: #d4dfcc;
+      --color-error: #a12c7b;
+      --color-error-bg: #f3e0ef;
+      --color-warning: #964219;
+      --color-warning-bg: #f0e0d4;
+      --shadow-sm: 0 1px 3px oklch(0.2 0.01 80 / .07);
+      --shadow-md: 0 4px 16px oklch(0.2 0.01 80 / .09);
+      --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / .12);
+      --radius-sm: .375rem; --radius-md: .5rem; --radius-lg: .75rem;
+      --radius-xl: 1rem; --radius-full: 9999px;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --sp1:.25rem;--sp2:.5rem;--sp3:.75rem;--sp4:1rem;--sp5:1.25rem;
+      --sp6:1.5rem;--sp8:2rem;--sp10:2.5rem;--sp12:3rem;
+      --tx-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+      --tx-sm:clamp(.875rem,.8rem + .35vw,1rem);
+      --tx-base:clamp(1rem,.95rem + .25vw,1.125rem);
+      --tx-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --tx-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+    }
+    [data-theme="dark"] {
+      --color-bg:#111110; --color-surface:#181816; --color-surface-2:#1e1e1c;
+      --color-surface-offset:#232320; --color-border:#2e2e2b; --color-divider:#252523;
+      --color-text:#e0dfdc; --color-text-muted:#888785; --color-text-faint:#4e4d4b;
+      --color-primary:#4f98a3; --color-primary-light:#1e3538;
+      --color-success:#6daa45; --color-success-bg:#1e2d19;
+      --color-error:#d163a7; --color-error-bg:#2a0f22;
+      --color-warning:#bb653b; --color-warning-bg:#241208;
+      --shadow-sm:0 1px 3px oklch(0 0 0/.25);
+      --shadow-md:0 4px 16px oklch(0 0 0/.35);
+      --shadow-lg:0 12px 32px oklch(0 0 0/.45);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+    body{font-family:var(--font-body);font-size:var(--tx-sm);background:var(--color-bg);color:var(--color-text);min-height:100dvh;line-height:1.6;transition:background .2s,color .2s}
+
+    /* ── HEADER ── */
+    header{
+      background:var(--color-surface);border-bottom:1px solid var(--color-border);
+      padding:var(--sp4) var(--sp8);display:flex;align-items:center;
+      justify-content:space-between;gap:var(--sp4);
+      position:sticky;top:0;z-index:100;flex-wrap:wrap;
+      box-shadow:var(--shadow-sm);
+    }
+    .logo-area{display:flex;align-items:center;gap:var(--sp3)}
+    .logo-title{font-size:var(--tx-base);font-weight:600;letter-spacing:-.01em}
+    .logo-subtitle{font-size:var(--tx-xs);color:var(--color-text-muted)}
+    .header-right{display:flex;align-items:center;gap:var(--sp3);flex-wrap:wrap}
+
+    /* ── TIME CONTROLS ── */
+    .time-controls{
+      display:flex;align-items:center;gap:var(--sp2);
+      background:var(--color-surface-offset);border:1px solid var(--color-border);
+      border-radius:var(--radius-lg);padding:var(--sp1) var(--sp2);flex-wrap:wrap;
+    }
+    .time-inputs{display:flex;align-items:center;gap:var(--sp2)}
+    .time-inputs label{font-size:var(--tx-xs);color:var(--color-text-muted);white-space:nowrap}
+    .time-inputs input[type="datetime-local"]{
+      font-family:var(--font-mono);font-size:var(--tx-xs);
+      background:var(--color-surface);border:1px solid var(--color-border);
+      border-radius:var(--radius-sm);color:var(--color-text);padding:3px 8px;
+      outline:none;transition:border-color 180ms;
+    }
+    .time-inputs input:focus{border-color:var(--color-primary)}
+    .time-divider{color:var(--color-text-faint);font-size:var(--tx-xs)}
+    .presets{display:flex;gap:var(--sp1)}
+    .btn-preset{
+      font-size:var(--tx-xs);font-family:var(--font-body);
+      padding:3px 10px;border-radius:var(--radius-full);
+      border:1px solid var(--color-border);background:transparent;
+      color:var(--color-text-muted);cursor:pointer;transition:all 180ms;
+    }
+    .btn-preset:hover,.btn-preset.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+    .btn-apply{
+      font-size:var(--tx-xs);font-weight:600;padding:4px 14px;
+      border-radius:var(--radius-md);border:none;background:var(--color-primary);
+      color:#fff;cursor:pointer;transition:opacity 180ms;
+    }
+    .btn-apply:hover{opacity:.85}
+    .btn-theme{
+      background:transparent;border:1px solid var(--color-border);
+      border-radius:var(--radius-full);width:32px;height:32px;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;color:var(--color-text-muted);transition:all 180ms;
+    }
+    .btn-theme:hover{color:var(--color-text);border-color:var(--color-text-muted)}
+
+    /* ── UPLOAD SCREEN ── */
+    #upload-screen{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:calc(100dvh - 65px);padding:var(--sp8);
+    }
+    .upload-card{
+      background:var(--color-surface);border:2px dashed var(--color-border);
+      border-radius:var(--radius-xl);padding:var(--sp12) var(--sp10);
+      text-align:center;max-width:520px;width:100%;
+      transition:border-color 200ms,background 200ms;
+      box-shadow:var(--shadow-md);
+    }
+    .upload-card.drag-over{
+      border-color:var(--color-primary);background:color-mix(in oklch,var(--color-primary) 5%,var(--color-surface));
+    }
+    .upload-icon{margin:0 auto var(--sp6);color:var(--color-text-faint)}
+    .upload-title{font-size:var(--tx-lg);font-weight:600;margin-bottom:var(--sp2);letter-spacing:-.01em}
+    .upload-desc{font-size:var(--tx-sm);color:var(--color-text-muted);margin-bottom:var(--sp6);max-width:38ch;margin-inline:auto}
+    .upload-desc code{
+      font-family:var(--font-mono);font-size:var(--tx-xs);
+      background:var(--color-surface-offset);padding:1px 5px;
+      border-radius:var(--radius-sm);border:1px solid var(--color-border);
+    }
+    .btn-upload{
+      display:inline-flex;align-items:center;gap:var(--sp2);
+      font-size:var(--tx-sm);font-weight:600;padding:10px 24px;
+      border-radius:var(--radius-md);border:none;background:var(--color-primary);
+      color:#fff;cursor:pointer;transition:opacity 180ms;
+    }
+    .btn-upload:hover{opacity:.85}
+    input[type="file"]{display:none}
+    .upload-hint{
+      margin-top:var(--sp4);font-size:var(--tx-xs);color:var(--color-text-faint);
+    }
+    .upload-error{
+      margin-top:var(--sp4);padding:var(--sp3) var(--sp4);
+      background:var(--color-error-bg);border:1px solid var(--color-error);
+      border-radius:var(--radius-md);color:var(--color-error);
+      font-size:var(--tx-xs);display:none;
+    }
+
+    /* ── DASHBOARD ── */
+    #dashboard{display:none}
+    main{padding:var(--sp8);max-width:1440px;margin:0 auto}
+
+    /* filename chip */
+    .file-chip{
+      display:inline-flex;align-items:center;gap:var(--sp2);
+      font-family:var(--font-mono);font-size:var(--tx-xs);
+      background:var(--color-surface-offset);border:1px solid var(--color-border);
+      border-radius:var(--radius-full);padding:2px 10px;
+      color:var(--color-text-muted);
+    }
+    .btn-reload{
+      font-size:var(--tx-xs);padding:2px 10px;
+      border-radius:var(--radius-full);border:1px solid var(--color-border);
+      background:transparent;color:var(--color-text-muted);
+      cursor:pointer;transition:all 180ms;
+    }
+    .btn-reload:hover{border-color:var(--color-primary);color:var(--color-primary)}
+
+    .period-info{
+      font-size:var(--tx-xs);color:var(--color-text-muted);
+      font-family:var(--font-mono);margin-bottom:var(--sp6);
+      display:flex;align-items:center;gap:var(--sp2);flex-wrap:wrap;
+    }
+    .period-info span{
+      background:var(--color-surface-offset);border:1px solid var(--color-border);
+      border-radius:var(--radius-sm);padding:2px 8px;
+    }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(185px,1fr));
+      gap:var(--sp4);margin-bottom:var(--sp8);
+    }
+    .kpi-card{
+      background:var(--color-surface);border:1px solid var(--color-border);
+      border-radius:var(--radius-xl);padding:var(--sp5);
+      display:flex;flex-direction:column;gap:var(--sp2);
+      box-shadow:var(--shadow-sm);transition:box-shadow 200ms;
+    }
+    .kpi-card:hover{box-shadow:var(--shadow-md)}
+    .kpi-card-name{
+      font-size:var(--tx-xs);font-weight:600;
+      letter-spacing:.04em;text-transform:uppercase;
+      color:var(--color-text-muted);white-space:nowrap;
+      overflow:hidden;text-overflow:ellipsis;
+    }
+    .kpi-card-value{
+      font-size:var(--tx-xl);font-weight:700;
+      font-family:var(--font-mono);line-height:1;letter-spacing:-.03em;
+    }
+    .cls-up{color:var(--color-success)}
+    .cls-warn{color:var(--color-warning)}
+    .cls-crit{color:var(--color-error)}
+    .cls-nodata{color:var(--color-text-faint)}
+    .kpi-card-meta{font-size:var(--tx-xs);color:var(--color-text-muted)}
+    .kpi-card-bar{
+      height:4px;border-radius:var(--radius-full);
+      background:var(--color-surface-offset);overflow:hidden;margin-top:var(--sp1);
+    }
+    .kpi-card-bar-fill{
+      height:100%;border-radius:var(--radius-full);
+      transition:width 600ms cubic-bezier(.16,1,.3,1);
+    }
+    .fill-up{background:var(--color-success)}
+    .fill-warn{background:var(--color-warning)}
+    .fill-crit{background:var(--color-error)}
+    .fill-nodata{background:var(--color-text-faint)}
+
+    /* ── TABLE ── */
+    .table-section{
+      background:var(--color-surface);border:1px solid var(--color-border);
+      border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-sm);
+    }
+    .table-header{
+      padding:var(--sp4) var(--sp6);border-bottom:1px solid var(--color-divider);
+      display:flex;align-items:center;justify-content:space-between;gap:var(--sp4);
+    }
+    .table-title{font-size:var(--tx-base);font-weight:600;letter-spacing:-.01em}
+    .total-badge{
+      font-size:var(--tx-xs);color:var(--color-text-muted);
+      background:var(--color-surface-offset);border:1px solid var(--color-border);
+      border-radius:var(--radius-full);padding:2px 10px;
+    }
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+    thead tr{border-bottom:1px solid var(--color-divider)}
+    th{
+      font-size:var(--tx-xs);font-weight:600;letter-spacing:.05em;
+      text-transform:uppercase;color:var(--color-text-muted);
+      padding:var(--sp3) var(--sp5);text-align:left;
+      white-space:nowrap;cursor:pointer;user-select:none;
+      transition:color 150ms;
+    }
+    th:hover{color:var(--color-text)}
+    th.sorted{color:var(--color-primary)}
+    .sort-icon{opacity:.3;margin-left:4px;font-style:normal;font-size:.9em}
+    th.sorted .sort-icon{opacity:1}
+    tbody tr{border-bottom:1px solid var(--color-divider);transition:background 120ms}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:var(--color-surface-2)}
+    td{padding:var(--sp3) var(--sp5);font-size:var(--tx-sm);vertical-align:middle}
+    .td-service{font-weight:600;letter-spacing:-.01em;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .badge{
+      display:inline-flex;align-items:center;gap:5px;
+      font-size:var(--tx-xs);font-weight:600;
+      padding:3px 10px;border-radius:var(--radius-full);white-space:nowrap;
+    }
+    .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+    .badge-up{background:var(--color-success-bg);color:var(--color-success)}
+    .badge-down{background:var(--color-error-bg);color:var(--color-error)}
+    .badge-warn{background:var(--color-warning-bg);color:var(--color-warning)}
+    .badge-nodata{background:var(--color-surface-offset);color:var(--color-text-faint)}
+    .avail-bar{display:flex;align-items:center;gap:var(--sp3)}
+    .avail-track{
+      flex:1;height:6px;background:var(--color-surface-offset);
+      border-radius:var(--radius-full);overflow:hidden;min-width:80px;
+    }
+    .avail-fill{
+      height:100%;border-radius:var(--radius-full);
+      transition:width 600ms cubic-bezier(.16,1,.3,1);
+    }
+    .avail-pct{
+      font-family:var(--font-mono);font-size:var(--tx-sm);
+      font-weight:600;min-width:64px;text-align:right;
+    }
+    .td-num{font-family:var(--font-mono);font-size:var(--tx-xs);color:var(--color-text-muted)}
+    .down-num{color:var(--color-error)!important;font-weight:600}
+    .table-footer{
+      padding:var(--sp3) var(--sp6);border-top:1px solid var(--color-divider);
+      font-size:var(--tx-xs);color:var(--color-text-muted);
+      display:flex;gap:var(--sp6);flex-wrap:wrap;
+    }
+    .footer-stat{display:flex;gap:var(--sp2);align-items:center}
+    .footer-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px){
+      header{padding:var(--sp3) var(--sp4)}
+      main{padding:var(--sp4)}
+      .kpi-grid{grid-template-columns:repeat(2,1fr);gap:var(--sp3)}
+      .time-controls{gap:var(--sp1)}
+    }
+
+    /* ── SHIMMER (loading state) ── */
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .skeleton{
+      background:linear-gradient(90deg,var(--color-surface-offset) 25%,var(--color-surface-2) 50%,var(--color-surface-offset) 75%);
+      background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;
+      border-radius:var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="app-header">
+  <div class="logo-area">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-label="Grafana CSV KPI" xmlns="http://www.w3.org/2000/svg">
+      <rect width="30" height="30" rx="8" fill="var(--color-primary)" opacity="0.18"/>
+      <path d="M7 22 L7 10.5 Q7 8 10 8 L14 8 Q18.5 8 18.5 12 Q18.5 16 14 16 L10 16 L10 22 Z" stroke="var(--color-primary)" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+      <circle cx="22" cy="20.5" r="4" fill="none" stroke="var(--color-primary)" stroke-width="1.7"/>
+      <path d="M22 19 L22 22 M20.5 20.5 L23.5 20.5" stroke="var(--color-primary)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="logo-title">Grafana CSV — KPI Dashboard</div>
+      <div class="logo-subtitle" id="file-label">Aucun fichier chargé</div>
+    </div>
+  </div>
+
+  <div class="header-right" id="header-controls" style="display:none">
+    <!-- Time controls -->
+    <div class="time-controls">
+      <div class="presets">
+        <button class="btn-preset" onclick="applyPreset(1,this)">1h</button>
+        <button class="btn-preset" onclick="applyPreset(6,this)">6h</button>
+        <button class="btn-preset" onclick="applyPreset(12,this)">12h</button>
+        <button class="btn-preset active" onclick="applyPreset(24,this)">24h</button>
+        <button class="btn-preset" onclick="applyPreset(168,this)">7j</button>
+        <button class="btn-preset" onclick="applyPreset(720,this)">30j</button>
+      </div>
+      <div class="time-inputs">
+        <label>De</label>
+        <input type="datetime-local" id="date-from" step="60">
+        <span class="time-divider">→</span>
+        <label>À</label>
+        <input type="datetime-local" id="date-to" step="60">
+      </div>
+      <button class="btn-apply" onclick="applyFilter()">Appliquer</button>
+    </div>
+    <button class="btn-reload" onclick="resetToUpload()" title="Charger un autre fichier">↩ Changer</button>
+    <button class="btn-theme" onclick="toggleTheme()" aria-label="Changer de thème">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <!-- Theme toggle visible on upload screen -->
+  <button class="btn-theme" id="theme-btn-upload" onclick="toggleTheme()" aria-label="Changer de thème">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen">
+  <div class="upload-card" id="drop-zone">
+    <div class="upload-icon">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h1 class="upload-title">Charger un fichier CSV</h1>
+    <p class="upload-desc">
+      Export Grafana au format <code>Join by field</code>.<br>
+      Première colonne <code>Time</code>, valeurs <code>UP</code> / <code>DOWN</code> / vide / <code>No data</code>.
+    </p>
+    <button class="btn-upload" onclick="document.getElementById('file-input').click()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Sélectionner un fichier
+    </button>
+    <input type="file" id="file-input" accept=".csv,text/csv" onchange="handleFile(this.files[0])">
+    <p class="upload-hint">ou glisser-déposer le fichier ici</p>
+    <div class="upload-error" id="upload-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <main>
+    <div class="period-info">
+      Période :
+      <span id="period-label">—</span>
+      <span id="period-checks">—</span>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Table -->
+    <div class="table-section">
+      <div class="table-header">
+        <span class="table-title">Détail par service</span>
+        <span class="total-badge" id="table-badge">— services</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('service',this)">Service <i class="sort-icon">↕</i></th>
+              <th onclick="sortBy('pct',this)">Disponibilité <i class="sort-icon">↕</i></th>
+              <th onclick="sortBy('up',this)">UP <i class="sort-icon">↕</i></th>
+              <th onclick="sortBy('down',this)">DOWN <i class="sort-icon">↕</i></th>
+              <th onclick="sortBy('total',this)">Total checks <i class="sort-icon">↕</i></th>
+            </tr>
+          </thead>
+          <tbody id="kpi-tbody"></tbody>
+        </table>
+      </div>
+      <div class="table-footer" id="table-footer"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let RAW = [];           // parsed rows [{Time: Date, colA: 'UP'|'DOWN'|null, ...}]
+let SERVICE_NAMES = []; // column names (without 'Time')
+let DATA_MIN = null;
+let DATA_MAX = null;
+let sortKey = 'pct';
+let sortDir = -1;
+let activePresetBtn = null;
+
+// ════════════════════════════════════════════
+//  CSV PARSING
+// ════════════════════════════════════════════
+
+/**
+ * Normalize a cell value:
+ * - empty string → null
+ * - 'No data' (case-insensitive) → null
+ * - otherwise → trimmed string
+ */
+function normalizeCell(v) {
+  if (!v) return null;
+  const t = v.trim();
+  if (t === '' || t.toLowerCase() === 'no data') return null;
+  return t;
+}
+
+/**
+ * Parse a CSV string into RAW records.
+ * Assumes first column is 'Time' and remaining columns are service names.
+ * Handles quoted fields.
+ */
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+  // Parse a single CSV line respecting quoted fields
+  function parseLine(line) {
+    const result = [];
+    let cur = '';
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        result.push(cur); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  const headers = parseLine(lines[0]).map(h => h.trim());
+
+  // Validate: first column must be 'Time' (case-insensitive)
+  if (!headers[0] || headers[0].toLowerCase() !== 'time') {
+    throw new Error(`La première colonne doit être "Time". Trouvé : "${headers[0]}"`);
+  }
+  if (headers.length < 2) {
+    throw new Error('Le fichier CSV doit contenir au moins une colonne de service.');
+  }
+
+  const serviceNames = headers.slice(1);
+  const records = [];
+  let minTs = Infinity, maxTs = -Infinity;
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const cells = parseLine(line);
+
+    // Parse timestamp
+    const rawTs = cells[0] ? cells[0].trim() : '';
+    const ts = new Date(rawTs.replace(' ', 'T'));
+    if (isNaN(ts.getTime())) continue; // skip unparseable rows
+
+    const row = { _time: ts };
+    for (let j = 0; j < serviceNames.length; j++) {
+      row[serviceNames[j]] = normalizeCell(cells[j + 1]);
+    }
+    records.push(row);
+
+    const t = ts.getTime();
+    if (t < minTs) minTs = t;
+    if (t > maxTs) maxTs = t;
+  }
+
+  if (records.length === 0) throw new Error('Aucune ligne de données valide trouvée.');
+
+  return { records, serviceNames, minTs: new Date(minTs), maxTs: new Date(maxTs) };
+}
+
+// ════════════════════════════════════════════
+//  FILE HANDLING
+// ════════════════════════════════════════════
+
+function handleFile(file) {
+  if (!file) return;
+  const errEl = document.getElementById('upload-error');
+  errEl.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const { records, serviceNames, minTs, maxTs } = parseCSV(e.target.result);
+      RAW = records;
+      SERVICE_NAMES = serviceNames;
+      DATA_MIN = minTs;
+      DATA_MAX = maxTs;
+      initDashboard(file.name);
+    } catch (err) {
+      errEl.textContent = '⚠ ' + err.message;
+      errEl.style.display = 'block';
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function resetToUpload() {
+  RAW = []; SERVICE_NAMES = []; DATA_MIN = null; DATA_MAX = null;
+  document.getElementById('upload-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('header-controls').style.display = 'none';
+  document.getElementById('theme-btn-upload').style.display = '';
+  document.getElementById('file-label').textContent = 'Aucun fichier chargé';
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-error').style.display = 'none';
+}
+
+// ════════════════════════════════════════════
+//  DRAG & DROP
+// ════════════════════════════════════════════
+
+(function setupDragDrop() {
+  const zone = document.getElementById('drop-zone');
+  ['dragenter','dragover'].forEach(e => zone.addEventListener(e, ev => {
+    ev.preventDefault(); zone.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(e => zone.addEventListener(e, ev => {
+    ev.preventDefault(); zone.classList.remove('drag-over');
+    if (e === 'drop' && ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+  }));
+})();
+
+// ════════════════════════════════════════════
+//  DASHBOARD INIT
+// ════════════════════════════════════════════
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function toLocalInput(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtDt(d) {
+  return d.toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function initDashboard(filename) {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('header-controls').style.display = 'flex';
+  document.getElementById('theme-btn-upload').style.display = 'none';
+
+  // Show filename (strip path)
+  const name = filename.split(/[\/\\]/).pop();
+  document.getElementById('file-label').textContent = name;
+
+  // Default: show full range (up to 24h)
+  const rangeMs = DATA_MAX - DATA_MIN;
+  const defaultHours = rangeMs <= 3600000 ? 1 : rangeMs <= 21600000 ? 6 : rangeMs <= 86400000 ? 24 : 24;
+  const from = new Date(DATA_MAX.getTime() - defaultHours * 3600000);
+  const safeFrom = from < DATA_MIN ? DATA_MIN : from;
+
+  document.getElementById('date-from').value = toLocalInput(safeFrom);
+  document.getElementById('date-to').value = toLocalInput(DATA_MAX);
+
+  // Activate appropriate preset button
+  const presetMap = {1:0,6:1,12:2,24:3};
+  const presetIdx = presetMap[defaultHours];
+  document.querySelectorAll('.btn-preset').forEach((b, i) => b.classList.toggle('active', i === (presetIdx ?? 3)));
+
+  applyFilter();
+}
+
+// ════════════════════════════════════════════
+//  KPI COMPUTATION
+// ════════════════════════════════════════════
+
+function computeKPIs(from, to) {
+  return SERVICE_NAMES.map(name => {
+    let up = 0, down = 0, total = 0;
+    for (const row of RAW) {
+      if (row._time < from || row._time > to) continue;
+      const v = row[name];
+      if (v === null || v === undefined) continue;
+      total++;
+      if (v === 'UP') up++;
+      else if (v === 'DOWN') down++;
+      // other non-null values counted in total but not up/down
+    }
+    const pct = total > 0 ? Math.round(up / total * 10000) / 100 : null;
+    return { service: name, up, down, total, pct };
+  });
+}
+
+// ════════════════════════════════════════════
+//  CLASSIFICATION
+// ════════════════════════════════════════════
+
+function cls(pct) {
+  if (pct === null) return 'nodata';
+  if (pct >= 99.5) return 'up';
+  if (pct >= 95) return 'warn';
+  return 'crit';
+}
+const BADGE_LABELS = { up:'Opérationnel', warn:'Dégradé', crit:'Indisponible', nodata:'No data' };
+const BADGE_CLS = { up:'badge-up', warn:'badge-warn', crit:'badge-down', nodata:'badge-nodata' };
+
+// ════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════
+
+function renderCards(data) {
+  document.getElementById('kpi-grid').innerHTML = data.map(d => {
+    const c = cls(d.pct);
+    const lbl = d.pct !== null ? d.pct.toFixed(2) + '%' : 'No data';
+    const w = d.pct !== null ? d.pct : 0;
+    const fc = c === 'nodata' ? 'fill-nodata' : 'fill-' + (c === 'nodata' ? 'up' : c);
+    const meta = d.total > 0
+      ? `${d.up} UP · ${d.down} DOWN · ${d.total} checks`
+      : 'Aucune donnée sur la période';
+    // Short display name: remove 'Service status of ' prefix if present
+    const shortName = d.service.replace(/^Service status of\s*/i, '');
+    return `<div class="kpi-card">
+      <div class="kpi-card-name" title="${d.service}">${shortName}</div>
+      <div class="kpi-card-value cls-${c}">${lbl}</div>
+      <div class="kpi-card-meta">${meta}</div>
+      <div class="kpi-card-bar"><div class="kpi-card-bar-fill ${fc}" style="width:${w}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTable(data, from, to) {
+  const sorted = [...data].sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    if (va === null && vb === null) return 0;
+    if (va === null) return 1;
+    if (vb === null) return -1;
+    return typeof va === 'string' ? va.localeCompare(vb) * sortDir : (va - vb) * sortDir;
+  });
+
+  let tUp = 0, tDown = 0, tTotal = 0;
+
+  const rows = sorted.map(d => {
+    const c = cls(d.pct);
+    const pctLbl = d.pct !== null ? d.pct.toFixed(2) + '%' : '—';
+    const w = d.pct !== null ? d.pct : 0;
+    const fc = c === 'nodata' ? '' : 'fill-' + c;
+    tUp += d.up; tDown += d.down; tTotal += d.total;
+    const shortName = d.service.replace(/^Service status of\s*/i, '');
+    return `<tr>
+      <td class="td-service" title="${d.service}">${shortName}</td>
+      <td><div class="avail-bar">
+        <div class="avail-track"><div class="avail-fill ${fc}" style="width:${w}%"></div></div>
+        <span class="avail-pct cls-${c}">${pctLbl}</span>
+        <span class="badge ${BADGE_CLS[c]}">${BADGE_LABELS[c]}</span>
+      </div></td>
+      <td class="td-num">${d.up}</td>
+      <td class="td-num${d.down > 0 ? ' down-num' : ''}">${d.down}</td>
+      <td class="td-num">${d.total}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('kpi-tbody').innerHTML = rows ||
+    '<tr><td colspan="5" style="text-align:center;color:var(--color-text-faint);padding:2rem">Aucune donnée sur cette période</td></tr>';
+  document.getElementById('table-badge').textContent = `${sorted.length} service${sorted.length > 1 ? 's' : ''}`;
+  document.getElementById('period-label').textContent = `${fmtDt(from)} → ${fmtDt(to)}`;
+  document.getElementById('period-checks').textContent = `${tTotal} vérification${tTotal > 1 ? 's' : ''}`;
+  document.getElementById('table-footer').innerHTML = `
+    <div class="footer-stat"><span class="footer-dot" style="background:var(--color-success)"></span>UP total : ${tUp}</div>
+    <div class="footer-stat"><span class="footer-dot" style="background:var(--color-error)"></span>DOWN total : ${tDown}</div>
+    <div class="footer-stat"><span class="footer-dot" style="background:var(--color-text-faint)"></span>Checks totaux : ${tTotal}</div>`;
+}
+
+// ════════════════════════════════════════════
+//  FILTER + SORT
+// ════════════════════════════════════════════
+
+function applyFilter() {
+  const fv = document.getElementById('date-from').value;
+  const tv = document.getElementById('date-to').value;
+  if (!fv || !tv) return;
+  const from = new Date(fv);
+  const to = new Date(tv);
+  if (isNaN(from) || isNaN(to)) return;
+  const data = computeKPIs(from, to);
+  renderCards(data);
+  renderTable(data, from, to);
+}
+
+function applyPreset(hours, btn) {
+  document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const dmax = DATA_MAX;
+  let from = new Date(dmax.getTime() - hours * 3600000);
+  if (from < DATA_MIN) from = DATA_MIN;
+  document.getElementById('date-from').value = toLocalInput(from);
+  document.getElementById('date-to').value = toLocalInput(dmax);
+  applyFilter();
+}
+
+function sortBy(key, th) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = key === 'service' ? 1 : -1; }
+  document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+  th.classList.add('sorted');
+  applyFilter();
+}
+
+// ════════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════════
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  const icon = next === 'dark'
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+  document.querySelectorAll('.btn-theme').forEach(b => b.innerHTML = icon);
+}
+</script>
+</body>
+</html>
