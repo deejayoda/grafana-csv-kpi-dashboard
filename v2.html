@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grafana CSV — KPI Dashboard v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════ */
+:root,[data-theme="light"]{
+  --bg:#f7f6f2;--sur:#f9f8f5;--sur2:#fbfbf9;--surO:#f0ede8;
+  --brd:#d4d1ca;--div:#dcd9d5;
+  --txt:#28251d;--muted:#7a7974;--faint:#bab9b4;
+  --pri:#01696f;--priL:#cedcd8;
+  --ok:#437a22;--okB:#d4dfcc;
+  --err:#a12c7b;--errB:#f3e0ef;
+  --wrn:#964219;--wrnB:#f0e0d4;
+  --shsm:0 1px 3px oklch(0.2 0.01 80/.07);
+  --shmd:0 4px 16px oklch(0.2 0.01 80/.09);
+  --shlg:0 12px 32px oklch(0.2 0.01 80/.12);
+  --rsm:.375rem;--rmd:.5rem;--rlg:.75rem;--rxl:1rem;--rful:9999px;
+  --fb:'Inter',system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+  --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.25rem;--s6:1.5rem;--s8:2rem;--s10:2.5rem;--s12:3rem;
+  --txs:clamp(.75rem,.7rem + .25vw,.875rem);
+  --tsm:clamp(.875rem,.8rem + .35vw,1rem);
+  --tbs:clamp(1rem,.95rem + .25vw,1.125rem);
+  --tlg:clamp(1.125rem,1rem + .75vw,1.5rem);
+  --txl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+}
+[data-theme="dark"]{
+  --bg:#111110;--sur:#181816;--sur2:#1e1e1c;--surO:#232320;
+  --brd:#2e2e2b;--div:#252523;
+  --txt:#e0dfdc;--muted:#888785;--faint:#4e4d4b;
+  --pri:#4f98a3;--priL:#1e3538;
+  --ok:#6daa45;--okB:#1e2d19;
+  --err:#d163a7;--errB:#2a0f22;
+  --wrn:#bb653b;--wrnB:#241208;
+  --shsm:0 1px 3px oklch(0 0 0/.25);
+  --shmd:0 4px 16px oklch(0 0 0/.35);
+  --shlg:0 12px 32px oklch(0 0 0/.45);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:var(--fb);font-size:var(--tsm);background:var(--bg);color:var(--txt);min-height:100dvh;line-height:1.6;transition:background .2s,color .2s}
+
+/* ════════════════════════════════════════
+   HEADER
+════════════════════════════════════════ */
+header{background:var(--sur);border-bottom:1px solid var(--brd);padding:var(--s4) var(--s8);display:flex;align-items:center;justify-content:space-between;gap:var(--s4);position:sticky;top:0;z-index:100;flex-wrap:wrap;box-shadow:var(--shsm)}
+.logo-area{display:flex;align-items:center;gap:var(--s3)}
+.logo-title{font-size:var(--tbs);font-weight:600;letter-spacing:-.01em}
+.logo-sub{font-size:var(--txs);color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+
+/* TIME CONTROLS */
+.tc{display:flex;align-items:center;gap:var(--s2);background:var(--surO);border:1px solid var(--brd);border-radius:var(--rlg);padding:var(--s1) var(--s2);flex-wrap:wrap}
+.tc label{font-size:var(--txs);color:var(--muted);white-space:nowrap}
+input[type=datetime-local]{font-family:var(--fm);font-size:var(--txs);background:var(--sur);border:1px solid var(--brd);border-radius:var(--rsm);color:var(--txt);padding:3px 8px;outline:none;transition:border-color 180ms}
+input[type=datetime-local]:focus{border-color:var(--pri)}
+.tc-div{color:var(--faint);font-size:var(--txs)}
+.range-select{font-family:var(--fb);font-size:var(--txs);background:var(--sur);border:1px solid var(--brd);border-radius:var(--rsm);color:var(--txt);padding:3px 28px 3px 8px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:160px}
+.range-select:focus{border-color:var(--pri)}
+.btn-apply{font-size:var(--txs);font-weight:600;padding:4px 14px;border-radius:var(--rmd);border:none;background:var(--pri);color:#fff;cursor:pointer;transition:opacity 180ms}
+.btn-apply:hover{opacity:.85}
+.btn-sm{font-size:var(--txs);padding:2px 10px;border-radius:var(--rful);border:1px solid var(--brd);background:transparent;color:var(--muted);cursor:pointer;transition:all 180ms}
+.btn-sm:hover{border-color:var(--pri);color:var(--pri)}
+.btn-icon{background:transparent;border:1px solid var(--brd);border-radius:var(--rful);width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 180ms}
+.btn-icon:hover{color:var(--txt);border-color:var(--muted)}
+.sep-badge{font-size:var(--txs);font-family:var(--fm);background:var(--priL);color:var(--pri);border-radius:var(--rsm);padding:1px 7px;border:1px solid color-mix(in oklch,var(--pri) 30%,transparent)}
+
+/* BOUTON PDF — accent distinct */
+.btn-pdf{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--txs);font-weight:600;
+  padding:5px 14px;
+  border-radius:var(--rmd);
+  border:1px solid color-mix(in oklch,var(--pri) 60%,transparent);
+  background:color-mix(in oklch,var(--pri) 12%,var(--sur));
+  color:var(--pri);
+  cursor:pointer;
+  transition:all 180ms;
+  white-space:nowrap;
+}
+.btn-pdf:hover{background:var(--pri);color:#fff;border-color:var(--pri);}
+.btn-pdf svg{flex-shrink:0}
+
+/* ════════════════════════════════════════
+   UPLOAD
+════════════════════════════════════════ */
+#upload-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 65px);padding:var(--s8)}
+.upload-card{background:var(--sur);border:2px dashed var(--brd);border-radius:var(--rxl);padding:var(--s12) var(--s10);text-align:center;max-width:540px;width:100%;transition:border-color 200ms,background 200ms;box-shadow:var(--shmd)}
+.upload-card.drag-over{border-color:var(--pri);background:color-mix(in oklch,var(--pri) 5%,var(--sur))}
+.upload-icon{margin:0 auto var(--s6);color:var(--faint)}
+.upload-title{font-size:var(--tlg);font-weight:600;margin-bottom:var(--s2);letter-spacing:-.01em}
+.upload-desc{font-size:var(--tsm);color:var(--muted);margin-bottom:var(--s6);max-width:40ch;margin-inline:auto}
+.upload-desc code{font-family:var(--fm);font-size:var(--txs);background:var(--surO);padding:1px 5px;border-radius:var(--rsm);border:1px solid var(--brd)}
+.btn-upload{display:inline-flex;align-items:center;gap:var(--s2);font-size:var(--tsm);font-weight:600;padding:10px 24px;border-radius:var(--rmd);border:none;background:var(--pri);color:#fff;cursor:pointer;transition:opacity 180ms}
+.btn-upload:hover{opacity:.85}
+input[type=file]{display:none}
+.upload-hint{margin-top:var(--s4);font-size:var(--txs);color:var(--faint)}
+.upload-fmts{margin-top:var(--s4);font-size:var(--txs);color:var(--faint);display:flex;justify-content:center;gap:var(--s3)}
+.upload-fmts span{background:var(--surO);border:1px solid var(--brd);border-radius:var(--rsm);padding:1px 8px}
+.upload-err{margin-top:var(--s4);padding:var(--s3) var(--s4);background:var(--errB);border:1px solid var(--err);border-radius:var(--rmd);color:var(--err);font-size:var(--txs);display:none;text-align:left;word-break:break-word}
+
+/* ════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════ */
+#dashboard{display:none}
+main{padding:var(--s8);max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:var(--s6)}
+.period-info{font-size:var(--txs);color:var(--muted);font-family:var(--fm);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+.period-info span{background:var(--surO);border:1px solid var(--brd);border-radius:var(--rsm);padding:2px 8px}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:var(--s4)}
+.kpi-card{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rxl);padding:var(--s5);display:flex;flex-direction:column;gap:var(--s2);box-shadow:var(--shsm);transition:box-shadow 200ms}
+.kpi-card:hover{box-shadow:var(--shmd)}
+.kpi-name{font-size:var(--txs);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-val{font-size:var(--txl);font-weight:700;font-family:var(--fm);line-height:1;letter-spacing:-.03em}
+.kpi-meta{font-size:var(--txs);color:var(--muted)}
+.kpi-bar{height:4px;border-radius:var(--rful);background:var(--surO);overflow:hidden;margin-top:var(--s1)}
+.kpi-fill{height:100%;border-radius:var(--rful);transition:width 600ms cubic-bezier(.16,1,.3,1)}
+.c-up{color:var(--ok)}.c-warn{color:var(--wrn)}.c-crit{color:var(--err)}.c-nd{color:var(--faint)}
+.f-up{background:var(--ok)}.f-warn{background:var(--wrn)}.f-crit{background:var(--err)}.f-nd{background:var(--faint)}
+
+/* ── COLLAPSIBLE SECTION ── */
+.sec{background:var(--sur);border:1px solid var(--brd);border-radius:var(--rxl);overflow:hidden;box-shadow:var(--shsm)}
+.sec-hdr{
+  padding:var(--s4) var(--s6);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  cursor:pointer;user-select:none;
+  transition:background 150ms;
+  border-bottom:1px solid var(--div);
+}
+.sec-hdr:hover{background:color-mix(in oklch,var(--pri) 4%,var(--sur))}
+.sec[data-collapsed] .sec-hdr{border-bottom-color:transparent}
+.sec-hdr-left{display:flex;align-items:center;gap:var(--s3);min-width:0}
+.sec-title{font-size:var(--tbs);font-weight:600;letter-spacing:-.01em}
+.sec-badge{font-size:var(--txs);color:var(--muted);background:var(--surO);border:1px solid var(--brd);border-radius:var(--rful);padding:2px 10px;white-space:nowrap}
+.sec-hdr-right{display:flex;align-items:center;gap:var(--s3);flex-shrink:0}
+.chevron{width:20px;height:20px;flex-shrink:0;color:var(--muted);transition:transform 280ms cubic-bezier(.16,1,.3,1),color 150ms;display:flex;align-items:center;justify-content:center}
+.sec-hdr:hover .chevron{color:var(--txt)}
+.sec[data-collapsed] .chevron{transform:rotate(-90deg)}
+.sec-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows 300ms cubic-bezier(.16,1,.3,1);overflow:hidden}
+.sec[data-collapsed] .sec-body{grid-template-rows:0fr}
+.sec-body-inner{min-height:0;overflow:hidden}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+thead tr{border-bottom:1px solid var(--div)}
+th{font-size:var(--txs);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:var(--s3) var(--s5);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:color 150ms}
+th:hover{color:var(--txt)}
+th.sorted{color:var(--pri)}
+.si{opacity:.3;margin-left:4px;font-style:normal;font-size:.9em}
+th.sorted .si{opacity:1}
+tbody tr{border-bottom:1px solid var(--div);transition:background 120ms}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--sur2)}
+td{padding:var(--s3) var(--s5);font-size:var(--tsm);vertical-align:middle}
+.td-svc{font-weight:600;letter-spacing:-.01em;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:var(--txs);font-weight:600;padding:3px 10px;border-radius:var(--rful);white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.b-up{background:var(--okB);color:var(--ok)}.b-dn{background:var(--errB);color:var(--err)}.b-wn{background:var(--wrnB);color:var(--wrn)}.b-nd{background:var(--surO);color:var(--faint)}
+.av-bar{display:flex;align-items:center;gap:var(--s3)}
+.av-trk{flex:1;height:6px;background:var(--surO);border-radius:var(--rful);overflow:hidden;min-width:80px}
+.av-fill{height:100%;border-radius:var(--rful);transition:width 600ms cubic-bezier(.16,1,.3,1)}
+.av-pct{font-family:var(--fm);font-size:var(--tsm);font-weight:600;min-width:64px;text-align:right}
+.td-n{font-family:var(--fm);font-size:var(--txs);color:var(--muted)}
+.dn{color:var(--err)!important;font-weight:600}
+.tbl-foot{padding:var(--s3) var(--s6);border-top:1px solid var(--div);font-size:var(--txs);color:var(--muted);display:flex;gap:var(--s6);flex-wrap:wrap}
+.fstat{display:flex;gap:var(--s2);align-items:center}
+.fdot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* HEATMAP */
+.heatmap-wrap{padding:var(--s6);overflow-x:auto}
+.heatmap-grid{display:grid;gap:2px}
+.hm-label{font-size:var(--txs);font-weight:600;color:var(--muted);white-space:nowrap;padding-right:var(--s3);display:flex;align-items:center;letter-spacing:.02em}
+.hm-cell{width:100%;min-width:14px;height:22px;border-radius:3px;cursor:default;transition:opacity 150ms;position:relative}
+.hm-cell:hover{opacity:.8}
+.hm-cell:hover::after{content:attr(title);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--bg);border:1px solid var(--brd);border-radius:var(--rsm);padding:3px 8px;font-size:var(--txs);font-family:var(--fm);white-space:nowrap;z-index:10;pointer-events:none;box-shadow:var(--shmd)}
+.hm-colhdr{font-size:9px;color:var(--faint);text-align:center;padding-top:2px;white-space:nowrap;overflow:hidden}
+.hm-legend{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s4);font-size:var(--txs);color:var(--muted)}
+.hm-legend-swatch{width:14px;height:14px;border-radius:2px;display:inline-block}
+
+/* INCIDENTS */
+.inc-list{padding:var(--s4) var(--s6);display:flex;flex-direction:column;gap:var(--s3)}
+.inc-item{display:flex;align-items:flex-start;gap:var(--s4);padding:var(--s4);background:var(--surO);border-radius:var(--rlg);border:1px solid var(--brd)}
+.inc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.inc-body{flex:1;min-width:0}
+.inc-svc{font-weight:600;font-size:var(--tsm);letter-spacing:-.01em}
+.inc-range{font-family:var(--fm);font-size:var(--txs);color:var(--muted);margin-top:2px}
+.inc-dur{font-family:var(--fm);font-size:var(--txs);font-weight:600;flex-shrink:0;padding:2px 10px;border-radius:var(--rful);background:var(--errB);color:var(--err)}
+.inc-empty{padding:var(--s10);text-align:center;color:var(--faint);font-size:var(--tsm)}
+
+/* SECTION CONTROLS */
+.section-controls{display:flex;align-items:center;gap:var(--s2);justify-content:flex-end}
+.btn-ctrl{font-size:var(--txs);padding:3px 12px;border-radius:var(--rful);border:1px solid var(--brd);background:transparent;color:var(--muted);cursor:pointer;transition:all 180ms;display:flex;align-items:center;gap:5px}
+.btn-ctrl:hover{border-color:var(--pri);color:var(--pri)}
+
+/* ════════════════════════════════════════
+   MODAL DE PRÉVISUALISATION IMPRESSION
+════════════════════════════════════════ */
+.modal-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:200;
+  background:oklch(0.1 0 0 / .6);
+  backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+  padding:var(--s6);
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--sur);
+  border:1px solid var(--brd);
+  border-radius:var(--rxl);
+  box-shadow:var(--shlg);
+  max-width:480px;width:100%;
+  padding:var(--s8);
+  display:flex;flex-direction:column;gap:var(--s5);
+  animation:modal-in 200ms cubic-bezier(.16,1,.3,1);
+}
+@keyframes modal-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.modal-title{font-size:var(--tbs);font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:var(--s3)}
+.modal-title svg{color:var(--pri)}
+.modal-body{display:flex;flex-direction:column;gap:var(--s4)}
+.modal-field label{display:block;font-size:var(--txs);font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.modal-field input[type=text],
+.modal-field textarea{
+  width:100%;
+  background:var(--surO);
+  border:1px solid var(--brd);
+  border-radius:var(--rmd);
+  color:var(--txt);
+  font-family:var(--fb);
+  font-size:var(--tsm);
+  padding:8px 12px;
+  outline:none;
+  transition:border-color 180ms;
+  resize:vertical;
+}
+.modal-field input[type=text]:focus,
+.modal-field textarea:focus{border-color:var(--pri)}
+.modal-field textarea{min-height:72px;line-height:1.5}
+.modal-checks{display:flex;flex-direction:column;gap:var(--s2)}
+.modal-check{
+  display:flex;align-items:center;gap:var(--s3);
+  font-size:var(--tsm);cursor:pointer;user-select:none;
+  padding:var(--s2) var(--s3);
+  border-radius:var(--rmd);
+  transition:background 120ms;
+}
+.modal-check:hover{background:var(--surO)}
+.modal-check input[type=checkbox]{accent-color:var(--pri);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.modal-check-label{flex:1}
+.modal-check-desc{font-size:var(--txs);color:var(--muted)}
+.modal-footer{display:flex;gap:var(--s3);justify-content:flex-end}
+.btn-cancel{font-size:var(--tsm);padding:8px 18px;border-radius:var(--rmd);border:1px solid var(--brd);background:transparent;color:var(--muted);cursor:pointer;transition:all 180ms}
+.btn-cancel:hover{color:var(--txt);border-color:var(--muted)}
+.btn-print{display:inline-flex;align-items:center;gap:6px;font-size:var(--tsm);font-weight:600;padding:8px 20px;border-radius:var(--rmd);border:none;background:var(--pri);color:#fff;cursor:pointer;transition:opacity 180ms}
+.btn-print:hover{opacity:.85}
+
+/* ════════════════════════════════════════
+   EN-TÊTE D'IMPRESSION (visible seulement @print)
+════════════════════════════════════════ */
+#print-header{
+  display:none; /* caché en mode web */
+}
+
+/* ════════════════════════════════════════
+   @MEDIA PRINT
+   Surcharge complète pour rendu PDF propre
+════════════════════════════════════════ */
+@media print {
+  /* ── 1. Forcer le thème clair ── */
+  :root {
+    --bg:#ffffff !important;
+    --sur:#ffffff !important;
+    --sur2:#f9f9f9 !important;
+    --surO:#f3f3f1 !important;
+    --brd:#d0cdc8 !important;
+    --div:#e0ddd8 !important;
+    --txt:#1a1814 !important;
+    --muted:#6b6a67 !important;
+    --faint:#b0afab !important;
+    --pri:#01696f !important;
+    --priL:#d4e8e6 !important;
+    --ok:#3a6e1a !important;
+    --okB:#ddefd3 !important;
+    --err:#8a2067 !important;
+    --errB:#f5e2ef !important;
+    --wrn:#7d380f !important;
+    --wrnB:#f5e5da !important;
+    --shsm:none !important;
+    --shmd:none !important;
+    --shlg:none !important;
+  }
+
+  /* ── 2. Page setup ── */
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm 20mm 12mm;
+    /* Numérotation native via contenu généré */
+    @bottom-center {
+      content: "Page " counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #888;
+    }
+  }
+
+  /* ── 3. Reset layout ── */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { background: #fff !important; font-size: 10pt; color: #1a1814; }
+  body { min-height: auto; }
+
+  /* ── 4. Masquer les éléments non imprimables ── */
+  header,
+  #upload-screen,
+  .section-controls,
+  .btn-pdf,
+  .btn-sm,
+  .btn-icon,
+  .btn-ctrl,
+  .modal-overlay,
+  .tc,
+  .sep-badge,
+  .chevron,
+  .hm-cell:hover::after { display: none !important; }
+
+  /* ── 5. Afficher l'en-tête PDF ── */
+  #print-header { display: block !important; }
+
+  /* ── 6. Sections toujours dépliées ── */
+  .sec[data-collapsed] .sec-body { grid-template-rows: 1fr !important; }
+  .sec-body { overflow: visible !important; }
+  .sec-body-inner { overflow: visible !important; }
+
+  /* ── 7. Mise en page main ── */
+  main { padding: 0 !important; max-width: 100% !important; gap: 16pt !important; }
+
+  /* ── 8. Cards KPI: grille fixe 4 colonnes ── */
+  .kpi-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 8pt !important; }
+  .kpi-card {
+    border: 1pt solid #d0cdc8 !important;
+    border-radius: 6pt !important;
+    padding: 8pt !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .kpi-val { font-size: 16pt !important; }
+  .kpi-name { font-size: 7pt !important; }
+  .kpi-meta { font-size: 7pt !important; }
+
+  /* ── 9. Sections: pas de coupure dans l'en-tête ── */
+  .sec {
+    box-shadow: none !important;
+    border: 1pt solid #d0cdc8 !important;
+    border-radius: 6pt !important;
+    page-break-inside: auto;
+    break-inside: auto;
+    margin-bottom: 12pt;
+  }
+  .sec-hdr {
+    padding: 8pt 12pt !important;
+    page-break-after: avoid;
+    break-after: avoid;
+    cursor: default !important;
+  }
+  .sec-title { font-size: 11pt !important; }
+  .sec-badge { font-size: 8pt !important; }
+
+  /* ── 10. Tableau ── */
+  .table-wrap { overflow: visible !important; }
+  table { font-size: 8.5pt !important; }
+  th { font-size: 7pt !important; padding: 5pt 8pt !important; cursor: default !important; }
+  td { padding: 5pt 8pt !important; font-size: 8.5pt !important; }
+  tbody tr { page-break-inside: avoid; break-inside: avoid; }
+  .td-svc { max-width: none !important; white-space: normal !important; }
+  .av-trk { min-width: 50pt !important; }
+  .badge { font-size: 7pt !important; padding: 2pt 6pt !important; }
+  .tbl-foot { font-size: 8pt !important; padding: 6pt 12pt !important; }
+
+  /* ── 11. Heatmap ── */
+  .heatmap-wrap { padding: 8pt 12pt !important; overflow: visible !important; }
+  .hm-cell { height: 16px !important; }
+  .hm-label { font-size: 7pt !important; }
+  .hm-colhdr { font-size: 7pt !important; }
+  .hm-legend { font-size: 8pt !important; }
+
+  /* ── 12. Incidents ── */
+  .inc-list { padding: 6pt 12pt !important; }
+  .inc-item {
+    padding: 6pt !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .inc-svc { font-size: 9pt !important; }
+  .inc-range { font-size: 8pt !important; }
+  .inc-dur { font-size: 8pt !important; }
+
+  /* ── 13. Sauts de page entre sections ── */
+  #sec-heatmap { page-break-before: auto; }
+  #sec-incidents { page-break-before: auto; }
+  #sec-table { page-break-before: auto; }
+
+  /* ── 14. Barre de période ── */
+  .period-info { font-size: 8pt !important; margin-bottom: 8pt; }
+  .period-info span { border: 1pt solid #ccc !important; background: #f5f5f3 !important; }
+}
+
+@media(max-width:768px){
+  header{padding:var(--s3) var(--s4)}
+  main{padding:var(--s4);gap:var(--s4)}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:var(--s3)}
+  .tc{gap:var(--s1)}
+  .sec-hdr{padding:var(--s3) var(--s4)}
+}
+</style>
+</head>
+<body>
+
+<!-- MODAL EXPORT PDF -->
+<div class="modal-overlay" id="pdf-modal" onclick="closePdfModalOnBg(event)">
+  <div class="modal-box">
+    <div class="modal-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <path d="M9 13h6M9 17h4"/>
+      </svg>
+      Exporter en PDF
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>Titre du rapport</label>
+        <input type="text" id="pdf-title" placeholder="Rapport KPI — Mai 2026">
+      </div>
+      <div class="modal-field">
+        <label>Commentaire (optionnel)</label>
+        <textarea id="pdf-comment" placeholder="Contexte, observations, destinataires…"></textarea>
+      </div>
+      <div class="modal-field">
+        <label>Sections à inclure</label>
+        <div class="modal-checks">
+          <label class="modal-check">
+            <input type="checkbox" id="chk-kpi" checked>
+            <div class="modal-check-label">
+              <div>Vue d'ensemble</div>
+              <div class="modal-check-desc">Cartes KPI par service</div>
+            </div>
+          </label>
+          <label class="modal-check">
+            <input type="checkbox" id="chk-heatmap" checked>
+            <div class="modal-check-label">
+              <div>Disponibilité par jour</div>
+              <div class="modal-check-desc">Heatmap calendaire</div>
+            </div>
+          </label>
+          <label class="modal-check">
+            <input type="checkbox" id="chk-incidents" checked>
+            <div class="modal-check-label">
+              <div>Chronologie des incidents</div>
+              <div class="modal-check-desc">Liste des périodes DOWN</div>
+            </div>
+          </label>
+          <label class="modal-check">
+            <input type="checkbox" id="chk-table" checked>
+            <div class="modal-check-label">
+              <div>Détail par service</div>
+              <div class="modal-check-desc">Tableau complet trié</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closePdfModal()">Annuler</button>
+      <button class="btn-print" onclick="doPrint()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"/>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8"/>
+        </svg>
+        Imprimer / Enregistrer PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EN-TÊTE VISIBLE UNIQUEMENT À L'IMPRESSION -->
+<div id="print-header">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:10pt;border-bottom:2pt solid #01696f;margin-bottom:14pt">
+    <div>
+      <div style="font-size:16pt;font-weight:700;color:#1a1814;letter-spacing:-.02em" id="print-title-display">Rapport KPI</div>
+      <div style="font-size:9pt;color:#6b6a67;margin-top:3pt" id="print-period-display"></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:8pt;color:#6b6a67">Généré le</div>
+      <div style="font-size:9pt;font-weight:600;font-family:'JetBrains Mono',monospace;color:#1a1814" id="print-date-display"></div>
+      <div style="font-size:8pt;color:#6b6a67;margin-top:2pt" id="print-file-display"></div>
+    </div>
+  </div>
+  <div id="print-comment-display" style="display:none;margin-bottom:12pt;padding:8pt 10pt;background:#f3f3f1;border-left:3pt solid #01696f;border-radius:0 4pt 4pt 0">
+    <div style="font-size:8pt;font-weight:600;color:#6b6a67;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4pt">Commentaire</div>
+    <div style="font-size:9pt;color:#1a1814;line-height:1.5" id="print-comment-text"></div>
+  </div>
+</div>
+
+<!-- HEADER WEB -->
+<header id="app-header">
+  <div class="logo-area">
+    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="KPI Dashboard">
+      <rect width="30" height="30" rx="8" fill="var(--pri)" opacity="0.18"/>
+      <path d="M7 22L7 10.5Q7 8 10 8L14 8Q18.5 8 18.5 12Q18.5 16 14 16L10 16L10 22Z" stroke="var(--pri)" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+      <circle cx="22" cy="20.5" r="4" fill="none" stroke="var(--pri)" stroke-width="1.7"/>
+      <path d="M22 19L22 22M20.5 20.5L23.5 20.5" stroke="var(--pri)" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="logo-title">Grafana CSV — KPI Dashboard <span style="font-size:var(--txs);font-weight:400;opacity:.5">v2</span></div>
+      <div class="logo-sub" id="file-label">Aucun fichier chargé</div>
+    </div>
+  </div>
+
+  <div class="hdr-right" id="hdr-ctrl" style="display:none">
+    <div class="tc">
+      <label>Période</label>
+      <select class="range-select" id="range-select" onchange="onRangeSelect(this)">
+        <optgroup label="Courtes">
+          <option value="5m">5 dernières minutes</option>
+          <option value="15m">15 dernières minutes</option>
+          <option value="30m">30 dernières minutes</option>
+          <option value="1h">Dernière heure</option>
+          <option value="3h">3 dernières heures</option>
+          <option value="6h">6 dernières heures</option>
+          <option value="12h">12 dernières heures</option>
+          <option value="24h" selected>24 dernières heures</option>
+        </optgroup>
+        <optgroup label="Longues">
+          <option value="2d">2 derniers jours</option>
+          <option value="7d">7 derniers jours</option>
+          <option value="30d">30 derniers jours</option>
+          <option value="90d">90 derniers jours</option>
+          <option value="6M">6 derniers mois</option>
+          <option value="1y">Dernière année</option>
+          <option value="2y">2 dernières années</option>
+          <option value="5y">5 dernières années</option>
+        </optgroup>
+        <option value="custom">Plage personnalisée…</option>
+      </select>
+      <div id="custom-inputs" style="display:none;align-items:center;gap:var(--s2)">
+        <label>De</label>
+        <input type="datetime-local" id="date-from" step="60">
+        <span class="tc-div">→</span>
+        <label>À</label>
+        <input type="datetime-local" id="date-to" step="60">
+        <button class="btn-apply" onclick="applyFilter()">Appliquer</button>
+      </div>
+    </div>
+    <span id="sep-info" class="sep-badge"></span>
+
+    <!-- BOUTON PDF -->
+    <button class="btn-pdf" onclick="openPdfModal()" aria-label="Exporter en PDF">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <path d="M9 13h6M9 17h4"/>
+      </svg>
+      Exporter PDF
+    </button>
+
+    <button class="btn-sm" onclick="resetToUpload()">↩ Changer</button>
+    <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" aria-label="Thème">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+
+  <button class="btn-icon" id="theme-btn-up" onclick="toggleTheme()" aria-label="Thème">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</header>
+
+<!-- UPLOAD -->
+<div id="upload-screen">
+  <div class="upload-card" id="drop-zone">
+    <div class="upload-icon">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h1 class="upload-title">Charger un fichier CSV</h1>
+    <p class="upload-desc">Export Grafana (<code>Join by field</code> ou standard).<br>Première colonne <code>Time</code> — séparateur <code>,</code> ou <code>TAB</code> auto-détecté.</p>
+    <button class="btn-upload" onclick="document.getElementById('fi').click()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Sélectionner un fichier
+    </button>
+    <input type="file" id="fi" accept=".csv,.tsv" onchange="handleFile(this.files[0])">
+    <p class="upload-hint">ou glisser-déposer ici</p>
+    <div class="upload-fmts"><span>CSV virgule</span><span>TSV tabulation</span><span>UTF-8 BOM ✓</span></div>
+    <div class="upload-err" id="upload-err"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+<main>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--s3)">
+    <div class="period-info">Période : <span id="period-lbl">—</span><span id="period-chk">—</span></div>
+    <div class="section-controls">
+      <button class="btn-ctrl" onclick="collapseAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+        Tout réduire
+      </button>
+      <button class="btn-ctrl" onclick="expandAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        Tout déplier
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="sec" id="sec-kpi">
+    <div class="sec-hdr" onclick="toggleSec('sec-kpi')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <span class="sec-title">Vue d'ensemble</span>
+      </div>
+      <div class="sec-hdr-right"><span class="sec-badge" id="kpi-badge">—</span></div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner" style="padding:var(--s6)">
+        <div class="kpi-grid" id="kpi-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="sec" id="sec-heatmap">
+    <div class="sec-hdr" onclick="toggleSec('sec-heatmap')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <span class="sec-title">Disponibilité par jour</span>
+      </div>
+      <div class="sec-hdr-right"><span class="sec-badge" id="hm-badge">—</span></div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner">
+        <div class="heatmap-wrap">
+          <div id="heatmap"></div>
+          <div class="hm-legend">
+            <span class="hm-legend-swatch" style="background:#3a6e1a"></span>100% UP
+            <span class="hm-legend-swatch" style="background:#7d380f"></span>Dégradé
+            <span class="hm-legend-swatch" style="background:#8a2067"></span>Incidents
+            <span class="hm-legend-swatch" style="background:#f3f3f1;border:1px solid #d0cdc8"></span>No data
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCIDENTS -->
+  <div class="sec" id="sec-incidents">
+    <div class="sec-hdr" onclick="toggleSec('sec-incidents')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <span class="sec-title">Chronologie des incidents</span>
+      </div>
+      <div class="sec-hdr-right"><span class="sec-badge" id="inc-badge">—</span></div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner"><div id="inc-list"></div></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="sec" id="sec-table">
+    <div class="sec-hdr" onclick="toggleSec('sec-table')" role="button" aria-expanded="true">
+      <div class="sec-hdr-left">
+        <div class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <span class="sec-title">Détail par service</span>
+      </div>
+      <div class="sec-hdr-right"><span class="sec-badge" id="tbl-badge">—</span></div>
+    </div>
+    <div class="sec-body">
+      <div class="sec-body-inner">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th onclick="sortBy('service',this)">Service <i class="si">↕</i></th>
+              <th onclick="sortBy('pct',this)">Disponibilité <i class="si">↕</i></th>
+              <th onclick="sortBy('up',this)">UP <i class="si">↕</i></th>
+              <th onclick="sortBy('down',this)">DOWN <i class="si">↕</i></th>
+              <th onclick="sortBy('total',this)">Total checks <i class="si">↕</i></th>
+            </tr></thead>
+            <tbody id="kpi-tbody"></tbody>
+          </table>
+        </div>
+        <div class="tbl-foot" id="tbl-foot"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ══ STATE
+let RAW=[], SVC=[], DMIN=null, DMAX=null, SK='pct', SD=-1;
+let CURRENT_FROM=null, CURRENT_TO=null, CURRENT_FILE='';
+
+// ══ PDF MODAL
+function openPdfModal(){
+  const t=document.getElementById('pdf-title');
+  if(!t.value){
+    const period=document.getElementById('period-lbl').textContent;
+    t.value=`Rapport KPI — ${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}`;
+  }
+  document.getElementById('pdf-modal').classList.add('open');
+}
+function closePdfModal(){
+  document.getElementById('pdf-modal').classList.remove('open');
+}
+function closePdfModalOnBg(e){
+  if(e.target===document.getElementById('pdf-modal'))closePdfModal();
+}
+
+function doPrint(){
+  // 1. Lire les options
+  const title=document.getElementById('pdf-title').value||'Rapport KPI';
+  const comment=document.getElementById('pdf-comment').value.trim();
+  const inclKpi=document.getElementById('chk-kpi').checked;
+  const inclHm=document.getElementById('chk-heatmap').checked;
+  const inclInc=document.getElementById('chk-incidents').checked;
+  const inclTbl=document.getElementById('chk-table').checked;
+
+  // 2. Sections: collapse celles non cochées, expand les cochées
+  const secMap={
+    'sec-kpi':inclKpi,'sec-heatmap':inclHm,
+    'sec-incidents':inclInc,'sec-table':inclTbl
+  };
+  Object.entries(secMap).forEach(([id,include])=>{
+    const s=document.getElementById(id);
+    if(!s)return;
+    if(include)s.removeAttribute('data-collapsed');
+    else s.setAttribute('data-collapsed','');
+  });
+
+  // 3. Remplir l'en-tête d'impression
+  document.getElementById('print-title-display').textContent=title;
+  document.getElementById('print-period-display').textContent=
+    'Période : '+document.getElementById('period-lbl').textContent+
+    '  ·  '+document.getElementById('period-chk').textContent;
+  document.getElementById('print-date-display').textContent=
+    new Date().toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('print-file-display').textContent='Source : '+(CURRENT_FILE||'—');
+
+  const cd=document.getElementById('print-comment-display');
+  const ct=document.getElementById('print-comment-text');
+  if(comment){ct.textContent=comment;cd.style.display='block';}
+  else cd.style.display='none';
+
+  // 4. Fermer la modale et lancer l'impression
+  closePdfModal();
+  setTimeout(()=>window.print(),80);
+}
+
+// ══ COLLAPSE
+function toggleSec(id){
+  const sec=document.getElementById(id);
+  if(!sec)return;
+  const c=sec.hasAttribute('data-collapsed');
+  if(c)sec.removeAttribute('data-collapsed');else sec.setAttribute('data-collapsed','');
+  const h=sec.querySelector('.sec-hdr');
+  if(h)h.setAttribute('aria-expanded',String(c));
+}
+function collapseAll(){
+  document.querySelectorAll('.sec').forEach(s=>{
+    s.setAttribute('data-collapsed','');
+    const h=s.querySelector('.sec-hdr');
+    if(h)h.setAttribute('aria-expanded','false');
+  });
+}
+function expandAll(){
+  document.querySelectorAll('.sec').forEach(s=>{
+    s.removeAttribute('data-collapsed');
+    const h=s.querySelector('.sec-hdr');
+    if(h)h.setAttribute('aria-expanded','true');
+  });
+}
+
+// ══ CSV PARSER
+function stripBOM(t){return t.charCodeAt(0)===0xFEFF?t.slice(1):t}
+function detectSep(l){return(l.match(/\t/g)||[]).length>=(l.match(/,/g)||[]).length?'\t':','}
+function parseLine(line,sep){
+  const r=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}
+    else if(c===sep&&!q){r.push(cur);cur='';}
+    else cur+=c;
+  }
+  r.push(cur);return r;
+}
+function normCell(v){
+  if(!v)return null;const t=v.trim();
+  return(t===''||t.toLowerCase()==='no data')?null:t;
+}
+function parseCSV(raw){
+  const text=stripBOM(raw).replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines=text.split('\n');
+  const sep=detectSep(lines[0]||'');
+  const headers=parseLine(lines[0],sep).map(h=>h.trim());
+  if(!headers[0]||headers[0].toLowerCase()!=='time')
+    throw new Error(`Première colonne attendue : "Time". Trouvé : "${headers[0]||'(vide)'}" (sep: ${sep==='\t'?'TAB':','})`);
+  if(headers.length<2)throw new Error('Au moins une colonne service requise.');
+  const svc=headers.slice(1);
+  const rec=[];let mn=Infinity,mx=-Infinity;
+  for(let i=1;i<lines.length;i++){
+    const l=lines[i].trim();if(!l)continue;
+    const cells=parseLine(l,sep);
+    const ts=new Date((cells[0]||'').trim().replace(' ','T'));
+    if(isNaN(ts))continue;
+    const row={_t:ts};
+    svc.forEach((s,j)=>row[s]=normCell(cells[j+1]));
+    rec.push(row);
+    const t=ts.getTime();if(t<mn)mn=t;if(t>mx)mx=t;
+  }
+  if(!rec.length)throw new Error('Aucune donnée valide trouvée.');
+  return{rec,svc,sep,mn:new Date(mn),mx:new Date(mx)};
+}
+
+// ══ FILE
+function handleFile(file){
+  if(!file)return;
+  const err=document.getElementById('upload-err');err.style.display='none';
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const{rec,svc,sep,mn,mx}=parseCSV(e.target.result);
+      RAW=rec;SVC=svc;DMIN=mn;DMAX=mx;
+      CURRENT_FILE=file.name.split(/[\/\\]/).pop();
+      initDash(file.name,sep);
+    }catch(ex){err.textContent='⚠ '+ex.message;err.style.display='block';}
+  };
+  r.readAsText(file,'UTF-8');
+}
+function resetToUpload(){
+  RAW=[];SVC=[];DMIN=null;DMAX=null;CURRENT_FILE='';
+  document.getElementById('upload-screen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('hdr-ctrl').style.display='none';
+  document.getElementById('theme-btn-up').style.display='';
+  document.getElementById('file-label').textContent='Aucun fichier chargé';
+  document.getElementById('fi').value='';
+  document.getElementById('upload-err').style.display='none';
+}
+(function(){
+  const z=document.getElementById('drop-zone');
+  ['dragenter','dragover'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.add('drag-over');}));
+  ['dragleave','drop'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.remove('drag-over');if(ev==='drop'&&e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);}));
+})();
+
+// ══ TIME HELPERS
+function pad(n){return String(n).padStart(2,'0')}
+function toInput(d){return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function fmtDt(d){return d.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function fmtDay(d){return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}
+function resolveRange(val){
+  const ref=DMAX||new Date();
+  const t=ref.getTime();
+  const MAP={'5m':5*60000,'15m':15*60000,'30m':30*60000,'1h':3600000,'3h':3*3600000,'6h':6*3600000,'12h':12*3600000,'24h':24*3600000,'2d':2*86400000,'7d':7*86400000,'30d':30*86400000,'90d':90*86400000,'6M':180*86400000,'1y':365*86400000,'2y':2*365*86400000,'5y':5*365*86400000};
+  const ms=MAP[val];if(!ms)return null;
+  return{from:new Date(Math.max(t-ms,DMIN.getTime())),to:ref};
+}
+
+// ══ INIT
+function initDash(filename,sep){
+  document.getElementById('upload-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('hdr-ctrl').style.display='flex';
+  document.getElementById('theme-btn-up').style.display='none';
+  document.getElementById('file-label').textContent=CURRENT_FILE;
+  document.getElementById('sep-info').textContent=sep==='\t'?'sep: TAB':'sep: ,';
+  expandAll();
+  const rangeMs=DMAX-DMIN;
+  let dv='24h';
+  if(rangeMs<=5*60000)dv='5m';
+  else if(rangeMs<=30*60000)dv='30m';
+  else if(rangeMs<=3600000)dv='1h';
+  else if(rangeMs<=6*3600000)dv='6h';
+  else if(rangeMs<=2*86400000)dv='2d';
+  else if(rangeMs<=7*86400000)dv='7d';
+  else if(rangeMs<=30*86400000)dv='30d';
+  else dv='90d';
+  document.getElementById('range-select').value=dv;
+  applyRangePreset(dv);
+}
+
+// ══ RANGE
+function onRangeSelect(sel){
+  const val=sel.value;
+  const ci=document.getElementById('custom-inputs');
+  if(val==='custom'){
+    ci.style.display='flex';
+    document.getElementById('date-from').value=toInput(DMIN);
+    document.getElementById('date-to').value=toInput(DMAX);
+  }else{
+    ci.style.display='none';
+    applyRangePreset(val);
+  }
+}
+function applyRangePreset(val){const r=resolveRange(val);if(r)refresh(r.from,r.to);}
+
+// ══ KPI
+function computeKPIs(from,to){
+  return SVC.map(name=>{
+    let up=0,dn=0,tot=0;
+    for(const row of RAW){
+      if(row._t<from||row._t>to)continue;
+      const v=row[name];if(v===null)continue;
+      tot++;if(v==='UP')up++;else if(v==='DOWN')dn++;
+    }
+    const pct=tot>0?Math.round(up/tot*10000)/100:null;
+    return{service:name,up,down:dn,total:tot,pct};
+  });
+}
+
+// ══ HEATMAP
+function computeHeatmap(from,to){
+  const days=[];
+  const d0=new Date(from);d0.setHours(0,0,0,0);
+  const d1=new Date(to);d1.setHours(23,59,59,999);
+  for(let d=new Date(d0);d<=d1;d=new Date(d.getTime()+86400000))days.push(new Date(d));
+  const data={};
+  SVC.forEach(s=>{
+    data[s]={};
+    days.forEach(day=>{const key=day.toDateString();data[s][key]={up:0,dn:0,tot:0};});
+  });
+  for(const row of RAW){
+    if(row._t<from||row._t>to)continue;
+    const dk=new Date(new Date(row._t).setHours(0,0,0,0)).toDateString();
+    SVC.forEach(s=>{
+      const v=row[s];if(v===null)return;
+      data[s][dk].tot++;
+      if(v==='UP')data[s][dk].up++;else if(v==='DOWN')data[s][dk].dn++;
+    });
+  }
+  return{data,days};
+}
+function hmColor(cell){
+  if(!cell||cell.tot===0)return null;
+  const pct=cell.up/cell.tot*100;
+  const cs=getComputedStyle(document.documentElement);
+  if(pct>=99.5)return cs.getPropertyValue('--ok').trim();
+  if(pct>=95)return cs.getPropertyValue('--wrn').trim();
+  return cs.getPropertyValue('--err').trim();
+}
+function renderHeatmap(from,to){
+  const{data,days}=computeHeatmap(from,to);
+  const el=document.getElementById('heatmap');
+  if(!days.length){el.innerHTML='<div style="padding:var(--s6);color:var(--faint);font-size:var(--txs)">Aucune donnée</div>';return;}
+  const colW=Math.max(14,Math.min(40,Math.floor((el.parentElement.offsetWidth-200)/days.length)));
+  let html=`<div class="heatmap-grid" style="grid-template-columns:180px repeat(${days.length},${colW}px)">`;
+  html+='<div class="hm-label" style="font-size:9px;color:var(--faint)">Service</div>';
+  days.forEach(d=>{
+    const lbl=days.length<=31?fmtDay(d):(days.length<=90?fmtDay(d):`${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(2)}`);
+    html+=`<div class="hm-colhdr">${lbl}</div>`;
+  });
+  SVC.forEach(s=>{
+    const name=shortName(s);
+    html+=`<div class="hm-label" title="${s}">${name}</div>`;
+    days.forEach(d=>{
+      const cell=data[s][d.toDateString()];
+      const col=hmColor(cell);
+      const style=col?`background:${col}`:`background:var(--surO);border:1px solid var(--brd)`;
+      const pct=cell&&cell.tot>0?(cell.up/cell.tot*100).toFixed(1)+'%':'—';
+      html+=`<div class="hm-cell" style="${style}" title="${name} · ${fmtDay(d)} : ${pct} (${cell?cell.up:0} UP / ${cell?cell.dn:0} DOWN)"></div>`;
+    });
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  document.getElementById('hm-badge').textContent=`${days.length} jour${days.length>1?'s':''}`;
+}
+
+// ══ INCIDENTS
+function computeIncidents(from,to){
+  const incidents=[];
+  SVC.forEach(s=>{
+    let start=null;
+    const rows=RAW.filter(r=>r._t>=from&&r._t<=to).sort((a,b)=>a._t-b._t);
+    rows.forEach((row,i)=>{
+      const v=row[s];
+      if(v==='DOWN'&&!start)start=row._t;
+      if((v!=='DOWN'||i===rows.length-1)&&start){
+        const end=v!=='DOWN'?row._t:new Date(row._t.getTime()+3600000);
+        incidents.push({service:s,start:new Date(start),end,durH:Math.round((end-start)/360000)/10});
+        start=null;
+      }
+    });
+    if(start){const end=to;incidents.push({service:s,start:new Date(start),end,durH:Math.round((end-start)/360000)/10});}
+  });
+  incidents.sort((a,b)=>b.start-a.start);
+  return incidents;
+}
+function renderIncidents(from,to){
+  const incs=computeIncidents(from,to);
+  const el=document.getElementById('inc-list');
+  document.getElementById('inc-badge').textContent=`${incs.length} incident${incs.length!==1?'s':''}`;
+  if(!incs.length){el.innerHTML='<div class="inc-empty">✓ Aucun incident sur cette période</div>';return;}
+  el.innerHTML=`<div class="inc-list">${incs.map(inc=>{
+    const dur=inc.durH>=24?`${(inc.durH/24).toFixed(1)} j`:`${inc.durH} h`;
+    return`<div class="inc-item">
+      <span class="inc-dot" style="background:var(--err)"></span>
+      <div class="inc-body">
+        <div class="inc-svc">${shortName(inc.service)}</div>
+        <div class="inc-range">${fmtDt(inc.start)} → ${fmtDt(inc.end)}</div>
+      </div>
+      <span class="inc-dur">${dur}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ══ TABLE
+function renderTable(data,from,to){
+  CURRENT_FROM=from;CURRENT_TO=to;
+  const sorted=[...data].sort((a,b)=>{
+    const va=a[SK],vb=b[SK];
+    if(va===null&&vb===null)return 0;
+    if(va===null)return 1;if(vb===null)return -1;
+    return typeof va==='string'?va.localeCompare(vb)*SD:(va-vb)*SD;
+  });
+  let tU=0,tD=0,tT=0;
+  document.getElementById('kpi-tbody').innerHTML=sorted.map(d=>{
+    const c=cls(d.pct),pl=d.pct!==null?d.pct.toFixed(2)+'%':'—',w=d.pct!==null?d.pct:0;
+    tU+=d.up;tD+=d.down;tT+=d.total;
+    return`<tr>
+      <td class="td-svc" title="${d.service}">${shortName(d.service)}</td>
+      <td><div class="av-bar">
+        <div class="av-trk"><div class="av-fill ${c!=='nodata'?'f-'+c:''}" style="width:${w}%"></div></div>
+        <span class="av-pct c-${c}">${pl}</span>
+        <span class="badge ${BC[c]}">${BL[c]}</span>
+      </div></td>
+      <td class="td-n">${d.up}</td>
+      <td class="td-n${d.down>0?' dn':''}">${d.down}</td>
+      <td class="td-n">${d.total}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--faint);padding:2rem">Aucune donnée</td></tr>';
+  document.getElementById('tbl-badge').textContent=`${sorted.length} service${sorted.length>1?'s':''}`;
+  document.getElementById('period-lbl').textContent=`${fmtDt(from)} → ${fmtDt(to)}`;
+  document.getElementById('period-chk').textContent=`${tT} vérification${tT>1?'s':''}`;
+  document.getElementById('tbl-foot').innerHTML=`
+    <div class="fstat"><span class="fdot" style="background:var(--ok)"></span>UP : ${tU}</div>
+    <div class="fstat"><span class="fdot" style="background:var(--err)"></span>DOWN : ${tD}</div>
+    <div class="fstat"><span class="fdot" style="background:var(--faint)"></span>Total : ${tT}</div>`;
+}
+
+// ══ CARDS
+function renderCards(data){
+  const grid=document.getElementById('kpi-grid');
+  grid.innerHTML=data.map(d=>{
+    const c=cls(d.pct),lbl=d.pct!==null?d.pct.toFixed(2)+'%':'No data',w=d.pct!==null?d.pct:0;
+    return`<div class="kpi-card">
+      <div class="kpi-name" title="${d.service}">${shortName(d.service)}</div>
+      <div class="kpi-val c-${c}">${lbl}</div>
+      <div class="kpi-meta">${d.total>0?`${d.up} UP · ${d.down} DOWN · ${d.total} checks`:'Aucune donnée'}</div>
+      <div class="kpi-bar"><div class="kpi-fill f-${c==='nodata'?'nd':c}" style="width:${w}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('kpi-badge').textContent=`${data.length} service${data.length>1?'s':''}`;
+}
+
+// ══ HELPERS
+function shortName(s){return s.replace(/^Service status of\s*/i,'')}
+function cls(p){if(p===null)return'nodata';if(p>=99.5)return'up';if(p>=95)return'warn';return'crit'}
+const BL={up:'Opérationnel',warn:'Dégradé',crit:'Indisponible',nodata:'No data'};
+const BC={up:'b-up',warn:'b-wn',crit:'b-dn',nodata:'b-nd'};
+
+// ══ REFRESH
+function refresh(from,to){
+  const data=computeKPIs(from,to);
+  renderCards(data);
+  renderHeatmap(from,to);
+  renderIncidents(from,to);
+  renderTable(data,from,to);
+}
+function applyFilter(){
+  const fv=document.getElementById('date-from').value;
+  const tv=document.getElementById('date-to').value;
+  if(!fv||!tv)return;
+  const from=new Date(fv),to=new Date(tv);
+  if(!isNaN(from)&&!isNaN(to))refresh(from,to);
+}
+function sortBy(key,th){
+  if(SK===key)SD*=-1;else{SK=key;SD=key==='service'?1:-1;}
+  document.querySelectorAll('th').forEach(t=>t.classList.remove('sorted'));
+  th.classList.add('sorted');
+  const sel=document.getElementById('range-select');
+  if(sel.value==='custom')applyFilter();else applyRangePreset(sel.value);
+}
+
+// ══ THEME
+function toggleTheme(){
+  const html=document.documentElement;
+  const next=html.getAttribute('data-theme')==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  const icon=next==='dark'
+    ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+  document.querySelectorAll('.btn-icon').forEach(b=>b.innerHTML=icon);
+  const sel=document.getElementById('range-select');
+  if(RAW.length&&sel.value!=='custom')applyRangePreset(sel.value);
+  else if(RAW.length)applyFilter();
+}
+</script>
+</body>
+</html>
